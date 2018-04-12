@@ -15,6 +15,7 @@ spec:
         app: {{ template "fullname" . }}
         release: {{ .Release.Name }}
     spec:
+      serviceAccountName: {{ template "fullname" . }}
       containers:
       - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         name: {{ template "fullname" . }}
@@ -30,11 +31,15 @@ spec:
             secretKeyRef:
               name: {{ template "fullname" . }}-secret
               key: password
+        - name: KUBECONFIG
+          value: /app/config/kubeconfig
         volumeMounts:
         - mountPath: /app/config
           name: helmi-catalog
+        - mountPath: /app/tls
+          name: kube-ca
         ports:
-        - name: helmi
+        - name: helmi-port
           containerPort: 5000
         livenessProbe:
           httpGet:
@@ -50,4 +55,7 @@ spec:
       volumes:
       - name: helmi-catalog
         configMap:
-        name: {{ template "fullname" . }}-catalog
+          name: {{ template "fullname" . }}-catalog
+      - name: kube-ca
+        secret:
+          secretName: {{ template "fullname" . }}-secret

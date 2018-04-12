@@ -17,8 +17,27 @@ ingress:
   # tls:
   # - secretName: helmi-tls-secret
   # cert: |
-
   # key: |
+
+kubeconfig:
+  server: https://192.168.213.131:6443
+  cluster: kubernetes
+  username: helmi@k8s.io  # the username must bind the cluster-admin role
+  currentContext: helmi
+  userSet: |
+    # token: xxxx
+    auth-provider:
+      name: oidc
+      config:
+        client-id: kubernetes
+        client-secret: k8s-changeme
+        idp-certificate-authority: /app/tls/ca.pem
+        idp-issuer-url: https://uaa.k8s.io/oauth/token
+        id-token:
+        refresh-token:
+
+tls:
+  cacert: |
 
 catalog: |
   -

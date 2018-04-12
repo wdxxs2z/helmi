@@ -5,3 +5,21 @@ metadata:
 data:
   catalog.yaml: |
 {{ toYaml .Values.catalog | indent 4 }}
+  kubeconfig: |
+      apiVersion: v1
+      kind: Config
+      clusters:
+      - cluster:
+          certificate-authority: "/app/tls/ca.pem"
+          server: {{ .Values.kubeconfig.server }}
+        name: kubernetes
+      contexts:
+      - context:
+          cluster: {{ .Values.kubeconfig.cluster }}
+          user: {{ .Values.kubeconfig.username }}
+        name: context
+      current-context: {{ .Values.kubeconfig.currentContext }}
+      users:
+      - name: {{ .Values.kubeconfig.username }}
+        user:
+{{ toYaml .Values.kubeconfig.userSet | indent 10 }}
