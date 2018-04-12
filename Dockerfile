@@ -32,6 +32,9 @@ WORKDIR /app/
 COPY --from=builder /app/ .
 COPY --from=builder /usr/local/bin/dumb-init /usr/local/bin/dumb-init
 
+ADD scripts/init_helm.sh /app/
+RUN chmod +x /app/init_helm.sh
+
 # Setup environment
 ENV PATH "/app:${PATH}"
 
@@ -40,10 +43,6 @@ RUN addgroup -S helmi && \
     chown -R helmi:helmi /app
 
 USER helmi
-
-ADD scripts/init_helm.sh /app/
-
-RUN chmod +x /app/init_helm.sh
 
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 
