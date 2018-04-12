@@ -12,6 +12,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o helmi .
 # Copy helm artefacts
 WORKDIR /app/
 RUN cp /go/src/github.com/wdxxs2z/helmi/helmi .
+RUN cp /go/src/github.com/wdxxs2z/helmi/catalog.yaml .
 RUN rm -r /go/src/
 
 # Download kubectl 1.7.12

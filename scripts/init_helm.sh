@@ -4,5 +4,9 @@ if [ "$HELM_REPO_URL" != "" ] && [ "$HELM_REPO_NAME" != "" ]; then
     helm repo add $HELM_REPO_NAME $HELM_REPO_URL && \
     helm repo update
 fi
+# Make sure the catalog.yaml
+if [ -a /app/config/catalog.yaml ]; then
+    cp /app/config/catalog.yaml /app/
+fi
 # Start helmi
 helmi
