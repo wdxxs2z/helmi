@@ -9,8 +9,8 @@ import (
 	"github.com/rs/cors"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
-	"github.com/monostream/helmi/pkg/catalog"
-	"github.com/monostream/helmi/pkg/release"
+	"github.com/wdxxs2z/helmi/pkg/catalog"
+	"github.com/wdxxs2z/helmi/pkg/release"
 )
 
 type App struct {
@@ -157,8 +157,9 @@ func (a *App) createInstance(w http.ResponseWriter, r *http.Request) {
 	acceptsIncomplete := strings.EqualFold(r.URL.Query().Get("accepts_incomplete"), "true")
 
 	type requestData struct {
-		ServiceId string `json:"service_id"`
-		PlanId    string `json:"plan_id"`
+		ServiceId   string               `json:"service_id"`
+		PlanId      string               `json:"plan_id"`
+		Parameters  map[string]string    `json:"parameters"`
 	}
 
 	var data requestData
@@ -170,7 +171,7 @@ func (a *App) createInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := release.Install(&a.Catalog, data.ServiceId, data.PlanId, serviceId, acceptsIncomplete)
+	err := release.Install(&a.Catalog, data.ServiceId, data.PlanId, serviceId, acceptsIncomplete, data.Parameters)
 
 	if err != nil {
 		exists, existsErr := release.Exists(serviceId)

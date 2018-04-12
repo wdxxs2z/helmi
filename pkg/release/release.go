@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"go.uber.org/zap"
 	"github.com/satori/go.uuid"
-	"github.com/monostream/helmi/pkg/helm"
-	"github.com/monostream/helmi/pkg/kubectl"
-	"github.com/monostream/helmi/pkg/catalog"
+	"github.com/wdxxs2z/helmi/pkg/helm"
+	"github.com/wdxxs2z/helmi/pkg/kubectl"
+	"github.com/wdxxs2z/helmi/pkg/catalog"
 	"go.uber.org/zap/zapcore"
 	"os"
 	"reflect"
@@ -43,7 +43,7 @@ func getLogger() *zap.Logger {
 	return logger
 }
 
-func Install(catalog *catalog.Catalog, serviceId string, planId string, id string, acceptsIncomplete bool) error {
+func Install(catalog *catalog.Catalog, serviceId string, planId string, id string, acceptsIncomplete bool, parameters map[string]string) error {
 	name := getName(id)
 	logger := getLogger()
 
@@ -52,7 +52,7 @@ func Install(catalog *catalog.Catalog, serviceId string, planId string, id strin
 
 	chart, chartErr := getChart(service, plan)
 	chartVersion, chartVersionErr := getChartVersion(service, plan)
-	chartValues := getChartValues(service, plan)
+	chartValues := getChartValues(service, plan, parameters)
 
 	if chartErr != nil {
 		logger.Error("failed to install release",
@@ -276,7 +276,7 @@ func getChartVersion(service catalog.CatalogService, plan catalog.CatalogPlan) (
 	return "", errors.New("no helm chart version specified")
 }
 
-func getChartValues(service catalog.CatalogService, plan catalog.CatalogPlan) map[string]string {
+func getChartValues(service catalog.CatalogService, plan catalog.CatalogPlan, parameters map[string]string) map[string]string {
 	values := map[string]string{}
 	templates := map[string]string{}
 
@@ -285,6 +285,10 @@ func getChartValues(service catalog.CatalogService, plan catalog.CatalogPlan) ma
 	}
 
 	for key, value := range plan.ChartValues {
+		templates[key] = value
+	}
+
+	for key, value := range parameters {
 		templates[key] = value
 	}
 
@@ -413,6 +417,12 @@ func getUserCredentials(service catalog.CatalogService, plan catalog.CatalogPlan
 				for clusterPort, nodePort := range helmStatus.NodePorts {
 					if len(portParts) == 1 || strings.EqualFold(strconv.Itoa(clusterPort), portParts[1]) {
 						return strconv.Itoa(nodePort)
+					}
+				}
+
+				for containerPort, clusterPort := range  helmStatus.ClusterPorts {
+					if len(portParts) == 1 || strings.EqualFold(strconv.Itoa(containerPort), portParts[1]) {
+						return strconv.Itoa(clusterPort)
 					}
 				}
 
