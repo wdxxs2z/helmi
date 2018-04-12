@@ -4,15 +4,14 @@ FROM golang:1.9-alpine as builder
 RUN apk add --update --no-cache ca-certificates tar wget
 
 # Build helmi
-WORKDIR /go/src/github.com/monostream/helmi/
+WORKDIR /go/src/github.com/wdxxs2z/helmi/
 
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o helmi .
 
 # Copy helm artefacts
 WORKDIR /app/
-RUN cp /go/src/github.com/monostream/helmi/helmi .
-RUN cp /go/src/github.com/monostream/helmi/catalog.yaml .
+RUN cp /go/src/github.com/wdxxs2z/helmi/helmi .
 RUN rm -r /go/src/
 
 # Download kubectl 1.7.12
@@ -41,11 +40,10 @@ RUN addgroup -S helmi && \
 
 USER helmi
 
-# Initialize helm
-RUN helm init --client-only && \
-    helm repo add monostream http://monostream-helm.s3-eu-west-1.amazonaws.com/charts && \
-    helm repo update
+ADD scripts/init_helm.sh /app/
+
+RUN chmod +x /app/init_helm.sh
 
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 
-CMD ["helmi"]
+CMD ["init_helm.sh"]

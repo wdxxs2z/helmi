@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "fullname" . }}-catalog
+data:
+  catalog.yaml: |
+{{ toYaml .Values.catalog | indent 4 }}

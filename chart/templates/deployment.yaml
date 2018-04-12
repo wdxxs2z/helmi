@@ -1,0 +1,53 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "fullname" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "fullname" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        name: {{ template "fullname" . }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "fullname" . }}-secret
+              key: username
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "fullname" . }}-secret
+              key: password
+        volumeMounts:
+        - mountPath: /app/config
+          name: helmi-catalog
+        ports:
+        - name: helmi
+          containerPort: 5000
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 60
+        readinessProbe:
+          exec:
+            command: [ "/bin/sh", "-c", "kubectl version" ]
+          initialDelaySeconds: 30
+          periodSeconds: 60
+      volumes:
+      - name: helmi-catalog
+        configMap:
+        name: {{ template "fullname" . }}-catalog
