@@ -32,7 +32,7 @@ spec:
               name: {{ template "fullname" . }}-secret
               key: password
         - name: KUBECONFIG
-          value: /app/config/kubeconfig
+          value: /app/config/kubeconfig.yaml
         - name: HELM_REPO_NAME
           value: {{ .Values.helmi.repo_name }}
         - name: HELM_REPO_URL

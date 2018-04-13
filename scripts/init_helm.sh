@@ -9,7 +9,7 @@ else
     helm repo update
 fi
 
-if [ -a /app/config/catalog.yaml ]; then
+if [ -f /app/config/catalog.yaml ]; then
     cp /app/config/catalog.yaml /app/
 fi
 

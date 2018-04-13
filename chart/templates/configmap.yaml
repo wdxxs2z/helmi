@@ -3,9 +3,9 @@ kind: ConfigMap
 metadata:
   name: {{ template "fullname" . }}-catalog
 data:
-  catalog.yaml: |
+  catalog.yaml:
 {{ toYaml .Values.catalog | indent 4 }}
-  kubeconfig: |
+  kubeconfig.yaml:
     apiVersion: v1
     kind: Config
     clusters:
