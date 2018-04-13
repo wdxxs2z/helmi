@@ -33,6 +33,10 @@ spec:
               key: password
         - name: KUBECONFIG
           value: /app/config/kubeconfig
+        - name: HELM_REPO_NAME
+          value: {{ .Values.helmi.repo_name }}
+        - name: HELM_REPO_URL
+          value: {{ .Values.helmi.repo_url }}
         volumeMounts:
         - mountPath: /app/config
           name: helmi-catalog

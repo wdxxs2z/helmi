@@ -5,8 +5,13 @@ image:
 
 replicaCount: 1
 
-username: admin
-password: helmi
+serviceType: ClusterIP
+
+helmi:
+  username: admin
+  password: helmi
+  repo_url:
+  repo_name:
 
 ingress:
   hosts:
