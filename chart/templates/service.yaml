@@ -13,7 +13,6 @@ spec:
     - port: 5000
       targetPort: 5000
       name: helmi-port
-{{- end }}
   selector:
     app: {{ template "name" . }}
     release: {{ .Release.Name }}
