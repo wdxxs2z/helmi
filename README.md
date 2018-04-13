@@ -71,7 +71,7 @@ curl -k 'https://helmi-service-broker.k8s.io/v2/catalog' -i -X GET \
 
 Create mariadb instance.
 ```
-curl -k 'https://helmi-service-broker.k8s.io/v2/service_instances/3b2e7d2c915242a5befcf03e1c3f47cd' -i -X PUT \
+curl -k 'https://helmi-service-broker.k8s.io/v2/service_instances/3b2e7d2c915242a5befcf03e1c3f47cd' -X PUT \
 -H 'Accept: application/json' \
 -H 'Content-Type: application/x-www-form-urlencoded' \
 -u 'admin:helmi' \
