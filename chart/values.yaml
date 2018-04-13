@@ -29,7 +29,7 @@ kubeconfig:
   cluster: kubernetes
   username: helmi@k8s.io  # the username must bind the cluster-admin role
   currentContext: helmi
-  userSet: |
+  userSet:
     # token: xxxx
     auth-provider:
       name: oidc
@@ -44,7 +44,7 @@ kubeconfig:
 tls:
   cacert: |
 
-catalog: |
+catalog:
   -
     _id: ab53df4d-c279-4880-94f7-65e7d72b7834
     _name: mariadb
