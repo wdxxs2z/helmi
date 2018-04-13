@@ -17,7 +17,7 @@ data:
     - context:
         cluster: {{ .Values.kubeconfig.cluster }}
         user: {{ .Values.kubeconfig.username }}
-      name: context
+      name: {{ .Values.kubeconfig.currentContext }}
     current-context: {{ .Values.kubeconfig.currentContext }}
     users:
     - name: {{ .Values.kubeconfig.username }}

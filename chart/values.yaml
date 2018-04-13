@@ -70,6 +70,7 @@ catalog:
       _name: free
       description: "Free MariaDB Instance"
       chart-values:
+          persistence.enabled: false
           persistence.size: 8Gi
           persistence.storageClass: local-storage
   -

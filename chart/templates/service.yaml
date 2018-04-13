@@ -14,5 +14,5 @@ spec:
       targetPort: 5000
       name: helmi-port
   selector:
-    app: {{ template "name" . }}
+    app: {{ template "fullname" . }}
     release: {{ .Release.Name }}
