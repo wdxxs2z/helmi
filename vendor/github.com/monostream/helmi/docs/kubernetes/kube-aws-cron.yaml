@@ -1,0 +1,20 @@
+apiVersion: batch/v2alpha1
+kind: CronJob
+metadata:
+  name: monoregistry-secret-updater
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: monoregistry-secret-updater
+            image: monostream/aws-cli:latest
+            args:
+            - /bin/sh
+            - -c
+            # - 'kubectl delete secret monoregistry --ignore-not-found; kubectl create secret generic monoregistry --type="kubernetes.io/dockerconfigjson" --from-literal=.dockerconfigjson="$(echo "{\"auths\": { \"937400120367.dkr.ecr.eu-west-1.amazonaws.com\": { \"auth\": \"$(export AWS_ACCESS_KEY_ID=AKIAJFIRAIDGKTWPVFYA; export AWS_SECRET_ACCESS_KEY=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; aws ecr get-authorization-token --output text --query authorizationData[].authorizationToken)\"}}}")"'
+            - export AWS_ACCESS_KEY_ID=AKIAJFIRAIDGKTWPVFYA; export AWS_SECRET_ACCESS_KEY=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; aws ecr get-login --region eu-west-1 | sed -e "s/-e none//" | sh -
+            # - 'kubectl delete secret monoregistry --ignore-not-found; kubectl create secret generic monoregistry --type="kubernetes.io/dockerconfigjson" --from-literal=.dockerconfigjson="$(echo "{\"auths\": { \"937400120367.dkr.ecr.eu-west-1.amazonaws.com\": { \"auth\": \"$(export AWS_ACCESS_KEY_ID=AKIAJFIRAIDGKTWPVFYA; export AWS_SECRET_ACCESS_KEY=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; docker run --rm -e "AWS_ACCESS_KEY_ID=AKIAJDFCFDGD3QX4TVIQ" -e "AWS_SECRET_ACCESS_KEY=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" -e "AWS_DEFAULT_REGION=eu-west-1" monostream/aws-cli:latest aws ecr get-authorization-token --output text --query authorizationData[].authorizationToken)\"}}}")"'
+          restartPolicy: OnFailure

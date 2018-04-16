@@ -1,12 +1,11 @@
 package kubectl
 
 import (
-	"bytes"
-	"strings"
-	"os/exec"
-	"encoding/json"
-	"github.com/jmoiron/jsonq"
-	"errors"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/kubernetes"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
+	"os"
 )
 
 type Node struct {
@@ -17,78 +16,55 @@ type Node struct {
 	ExternalIP string
 }
 
-func GetNodes() ([] Node, error) {
-	cmd := exec.Command("kubectl", "get", "nodes", "--output", "json")
-	output, err := cmd.CombinedOutput()
-
-	if err != nil {
-		return nil, errors.New(string(output[:]))
+func createClient() (*kubernetes.Clientset, error){
+	//kubernetes kubeconfig set
+	kubeconfig := os.Getenv("KUBECONFIG")
+	if kubeconfig != "" {
+		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+		if err != nil {
+			return nil, err
+		}
+		return kubernetes.NewForConfig(config)
 	}
 
-	data := map[string]interface{}{}
-
-	decoder := json.NewDecoder(bytes.NewReader(output))
-	decoder.Decode(&data)
-
-	dataQuery := jsonq.NewQuery(data)
-
-	var nodes [] Node
-
-	items, err := dataQuery.ArrayOfObjects("items")
-
+	//in kubernetes cluster without kubeconfig
+	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	for _, item := range items {
-		itemQuery := jsonq.NewQuery(item)
+	return kubernetes.NewForConfig(config)
+}
 
-		node := Node{}
+func GetNodes() ([] Node, error) {
+	var nodes [] Node
 
-		nodeId, err := itemQuery.String("spec", "externalID")
-
-		if err != nil {
-			return nil, err
-		}
-
-		node.Name = nodeId
-
-		nodeAddresses, err := itemQuery.ArrayOfObjects("status", "addresses")
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, nodeAddress := range nodeAddresses {
-			nodeAddressQuery := jsonq.NewQuery(nodeAddress)
-
-			addressType, err := nodeAddressQuery.String("type")
-
-			if err != nil {
-				return nil, err
-			}
-
-			addressValue, err := nodeAddressQuery.String("address")
-
-			if err != nil {
-				return nil, err
-			}
-
-			if strings.EqualFold(addressType, "Hostname") {
-				node.Hostname = addressValue
-			}
-
-			if strings.EqualFold(addressType, "InternalIP") {
-				node.InternalIP = addressValue
-			}
-
-			if strings.EqualFold(addressType, "ExternalIP") {
-				node.ExternalIP = addressValue
-			}
-		}
-
-		nodes = append(nodes, node)
+	clientset, err := createClient()
+	if err != nil {
+		return nil, err
 	}
 
+	items , err := clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, item := range items.Items {
+		node := Node{}
+		node.Name = item.Name
+		for _, address := range item.Status.Addresses {
+			if address.Type == "Hostname" {
+				node.Hostname = address.Address
+			}
+			if address.Type == "InternalIP" {
+				node.InternalIP = address.Address
+			}
+
+			if address.Type == "ExternalIP" {
+				node.ExternalIP = address.Address
+			}
+		}
+		nodes = append(nodes,node)
+	}
 	return nodes, nil
 }
