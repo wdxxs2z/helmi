@@ -62,7 +62,7 @@ func Install(release string, chart string, version string, values map[string]str
 		arguments = append(arguments, "--set", key+"="+strings.Replace(value, ",", "\\,", -1))
 	}
 
-	if namespace != nil {
+	if namespace != "" {
 		arguments = append(arguments, "--namespace", namespace)
 	}
 

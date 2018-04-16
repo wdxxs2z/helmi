@@ -289,7 +289,7 @@ func getChartNamespace(context map[string]string, parameters map[string]string) 
 			return value
 		}
 	}
-	return nil
+	return ""
 }
 
 func getChartValues(service catalog.CatalogService, plan catalog.CatalogPlan, parameters map[string]string) map[string]string {
