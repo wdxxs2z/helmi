@@ -75,7 +75,7 @@ curl -k 'https://helmi-service-broker.k8s.io/v2/service_instances/3b2e7d2c915242
 -H 'Accept: application/json' \
 -H 'Content-Type: application/x-www-form-urlencoded' \
 -u 'admin:helmi' \
--d '{"service_instance_guid":"a0029c76-7017-4a74-94b0-54a04ad94b80","plan_id":"e79306ef-4e10-4e3d-b38e-ffce88c90f59","service_id":"ab53df4d-c279-4880-94f7-65e7d72b7834","app_guid":"081d55a0-1bfa-4e51-8d08-273f764988db","parameters":{"serviceType":"NodePort"},"name":"mariadb-service"}'
+-d '{"service_instance_guid":"a0029c76-7017-4a74-94b0-54a04ad94b80","plan_id":"e79306ef-4e10-4e3d-b38e-ffce88c90f59","service_id":"ab53df4d-c279-4880-94f7-65e7d72b7834","app_guid":"081d55a0-1bfa-4e51-8d08-273f764988db","context": {"platform":"kubernetes","namespace":"mariadb-test"},"parameters":{"serviceType":"NodePort"},"name":"mariadb-service"}'
 ```
 
 Delete mariadb install.

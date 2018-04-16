@@ -160,6 +160,7 @@ func (a *App) createInstance(w http.ResponseWriter, r *http.Request) {
 		ServiceId   string               `json:"service_id"`
 		PlanId      string               `json:"plan_id"`
 		Parameters  map[string]string    `json:"parameters"`
+		Context     map[string]string	 `json:"context"`
 	}
 
 	var data requestData
@@ -171,7 +172,7 @@ func (a *App) createInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := release.Install(&a.Catalog, data.ServiceId, data.PlanId, serviceId, acceptsIncomplete, data.Parameters)
+	err := release.Install(&a.Catalog, data.ServiceId, data.PlanId, serviceId, acceptsIncomplete, data.Parameters, data.Context)
 
 	if err != nil {
 		exists, existsErr := release.Exists(serviceId)

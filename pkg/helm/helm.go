@@ -44,7 +44,7 @@ func Exists(release string) (bool, error) {
 	return false, err
 }
 
-func Install(release string, chart string, version string, values map[string]string, acceptsIncomplete bool) (error) {
+func Install(release string, chart string, version string, values map[string]string, namespace string, acceptsIncomplete bool) (error) {
 	arguments := [] string{}
 
 	arguments = append(arguments, "install", chart)
@@ -60,6 +60,10 @@ func Install(release string, chart string, version string, values map[string]str
 
 	for key, value := range values {
 		arguments = append(arguments, "--set", key+"="+strings.Replace(value, ",", "\\,", -1))
+	}
+
+	if namespace != nil {
+		arguments = append(arguments, "--namespace", namespace)
 	}
 
 	cmd := exec.Command("helm", arguments...)

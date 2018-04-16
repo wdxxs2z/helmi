@@ -43,7 +43,7 @@ func getLogger() *zap.Logger {
 	return logger
 }
 
-func Install(catalog *catalog.Catalog, serviceId string, planId string, id string, acceptsIncomplete bool, parameters map[string]string) error {
+func Install(catalog *catalog.Catalog, serviceId string, planId string, id string, acceptsIncomplete bool, parameters map[string]string, context map[string]string) error {
 	name := getName(id)
 	logger := getLogger()
 
@@ -53,6 +53,7 @@ func Install(catalog *catalog.Catalog, serviceId string, planId string, id strin
 	chart, chartErr := getChart(service, plan)
 	chartVersion, chartVersionErr := getChartVersion(service, plan)
 	chartValues := getChartValues(service, plan, parameters)
+	chartNamespace := getChartNamespace(context, parameters)
 
 	if chartErr != nil {
 		logger.Error("failed to install release",
@@ -69,7 +70,7 @@ func Install(catalog *catalog.Catalog, serviceId string, planId string, id strin
 		chartVersion = ""
 	}
 
-	err := helm.Install(name, chart, chartVersion, chartValues, acceptsIncomplete)
+	err := helm.Install(name, chart, chartVersion, chartValues, chartNamespace, acceptsIncomplete)
 
 	if err != nil {
 		logger.Error("failed to install release",
@@ -274,6 +275,21 @@ func getChartVersion(service catalog.CatalogService, plan catalog.CatalogPlan) (
 	}
 
 	return "", errors.New("no helm chart version specified")
+}
+
+//choice context namespace first
+func getChartNamespace(context map[string]string, parameters map[string]string) string {
+	for key, value := range context {
+		if strings.EqualFold(key, "namespace") {
+			return value
+		}
+	}
+	for key, value := range parameters {
+		if strings.EqualFold(key, "namespace") {
+			return value
+		}
+	}
+	return nil
 }
 
 func getChartValues(service catalog.CatalogService, plan catalog.CatalogPlan, parameters map[string]string) map[string]string {
