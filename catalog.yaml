@@ -9,11 +9,11 @@
   - mariadb
   metadata:
     displayName: "Kubernetes Helm Mariadb Service"
-    imageUrl: https://mariadb.org/wp-content/uploads/2015/05/MariaDB-Foundation-horizontal-x52.png
+    imageUrl: "https://mariadb.org/wp-content/uploads/2015/05/MariaDB-Foundation-horizontal-x52.png"
     longDescription: "Kubernetes Helm Mariadb Service"
     providerDisplayName: "Kubernetes Helm Mariadb Service"
-    documentationUrl: https://github.com/kubernetes/charts/tree/master/stable/mariadb
-    supportUrl: https://mariadb.org/
+    documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/mariadb"
+    supportUrl: "https://mariadb.org/"
   chart: stable/mariadb
   chart-version: 1.0.7
   chart-values:
@@ -38,11 +38,11 @@
     free: true
     metadata:
       costs:
-      - amount:
-          usd: 0.0
-        unit: MONTHLY
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
       bullets:
-      - Single node mariadb service
+        - Single node mariadb service
     chart-values:
         persistence.size: 8Gi
         persistence.storageClass: local-storage
@@ -50,6 +50,18 @@
   _id: 8dda5a6f-f796-4b52-806f-4129d7576d6e
   _name: minio
   description: "S3 Object Store as a Service"
+  bindable: true
+  plan_updatable: true
+  tags:
+  - minio
+  - private cloud storage
+  metadata:
+    displayName: "Kubernetes Helm Minio Service"
+    imageUrl: ""
+    longDescription: "Kubernetes Helm Minio Service"
+    providerDisplayName: "Kubernetes Helm Minio Service"
+    documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/minio"
+    supportUrl: "https://www.minio.io/"
   chart: stable/minio
   chart-version: 0.3.0
   chart-values:
@@ -70,6 +82,15 @@
     _id: f003f191-c250-4e85-9abd-038af629ad71
     _name: free
     description: "Free S3 Object Store Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
+      bullets:
+        - free s3 object store service
     chart-values:
       persistence.size: 8Gi
       persistence.storageClass: local-storage
@@ -87,8 +108,8 @@
     imageUrl: ""
     longDescription: "Kubernetes Helm RabbitMQ Service"
     providerDisplayName: "Kubernetes Helm RabbitMQ Service"
-    documentationUrl: https://github.com/kubernetes/charts/tree/master/stable/rabbitmq
-    supportUrl: https://mariadb.org/
+    documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/rabbitmq"
+    supportUrl: "https://mariadb.org/"
   chart: stable/rabbitmq
   chart-version: 0.6.8
   chart-values:
@@ -111,11 +132,11 @@
     free: true
     metadata:
       costs:
-      - amount:
-          usd: 0.0
-        unit: MONTHLY
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
       bullets:
-      - Single node rabbitmq service
+        - Single node rabbitmq service
     chart-values:
       persistence.size: 8Gi
       persistence.storageClass: local-storage
@@ -158,11 +179,11 @@
     free: true
     metadata:
       costs:
-      - amount:
-          usd: 0.0
-        unit: MONTHLY
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
       bullets:
-      - Single node mongodb service
+        - Single node mongodb service
     chart-values:
       persistence.size: 8Gi
       persistence.storageClass: local-storage
@@ -200,11 +221,11 @@
     free: true
     metadata:
       costs:
-      - amount:
-          usd: 0.0
-        unit: MONTHLY
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
       bullets:
-      - Single node redis service
+        - Single node redis service
     chart-values:
       persistence.size: 8Gi
       persistence.storageClass: local-storage
@@ -212,6 +233,18 @@
   _id: 201cb950-e640-4453-9d91-4708ea0a1342
   _name: "cassandra"
   description: "Cassandra as a Service"
+  bindable: true
+  plan_updatable: true
+  tags:
+  - cassandra
+  - nosql
+  metadata:
+    displayName: "Kubernetes Helm Cassandra Service"
+    imageUrl: ""
+    longDescription: "Kubernetes Helm Cassandra Service"
+    providerDisplayName: "Kubernetes Helm Cassandra Service"
+    documentationUrl: ""
+    supportUrl: ""
   chart: monostream/cassandra
   chart-version: 0.2.7
   chart-values:
@@ -231,6 +264,15 @@
     _id: 169d5466-12c9-4a89-a063-f72048b3d4c4
     _name: free
     description: "Free 3 Node Cassandra Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
+      bullets:
+        - cassandra service
     chart-values:
       persistence.size: 8Gi
       persistence.storageClass: local-storage
@@ -238,6 +280,15 @@
     _id: 7b16d6aa-260a-4b8d-b12c-464d2cedb9d0
     _name: dev
     description: "Single Node Development Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
+      bullets:
+        - cassandra service
     chart-values:
       persistence.size: 8Gi
       persistence.storageClass: local-storage
@@ -247,6 +298,18 @@
   _id: 777f5478-5796-426a-ab8a-5d3dc5e1bdcc
   _name: "muescheli"
   description: "Virusscan as a Service"
+  bindable: true
+  plan_updatable: true
+  tags:
+  - muescheli
+  - Virusscan
+  metadata:
+    displayName: "Kubernetes Helm Virusscan Service"
+    imageUrl: ""
+    longDescription: "Kubernetes Helm Virusscan Service"
+    providerDisplayName: "Kubernetes Helm Virusscan Service"
+    documentationUrl: ""
+    supportUrl: ""
   chart: monostream/muescheli
   chart-version: 0.1.5
   chart-values:
@@ -266,3 +329,12 @@
     _id: 75b7b1de-70ef-4499-b55c-e2337d320626
     _name: free
     description: "Free ClamAV Rest Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
+      bullets:
+        - clamAV anti-virus service

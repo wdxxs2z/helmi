@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"log"
+	"fmt"
 	"strings"
 	"net/http"
 	"encoding/json"
@@ -87,12 +88,23 @@ func auth(handler http.HandlerFunc) http.HandlerFunc {
 }
 
 func (a *App) getCatalog(w http.ResponseWriter, r *http.Request) {
+
+	type CostEntry struct {
+		Amount    map[string]string	`json:"amount"`
+		Unit      string		`json:"unit"`
+	}
+
+	type PlanMetadataEntry struct {
+		Costs    []CostEntry	`json:"costs"`
+		Bullets  []string	`json:"bullets"`
+	}
+
 	type PlanEntry struct {
 		Id          string `json:"id"`
 		Name        string `json:"name"`
 		Description string `json:"description"`
 
-		metadata    map[string]string	`json:"metadata"`
+		Metadata    PlanMetadataEntry	`json:"metadata"`
 
 		IsFree      bool `json:"free"`
 		IsBindable  bool `json:"bindable"`
@@ -104,7 +116,7 @@ func (a *App) getCatalog(w http.ResponseWriter, r *http.Request) {
 		Description string `json:"description"`
 
 		Tags        []string 		`json:"tags"`
-		metadata    map[string]string 	`json:"metadata"`
+		Metadata    map[string]string 	`json:"metadata"`
 
 		IsBindable  bool `json:"bindable"`
 		IsUpdatable bool `json:"plan_updateable"`
@@ -124,24 +136,31 @@ func (a *App) getCatalog(w http.ResponseWriter, r *http.Request) {
 			Name: service.Name,
 
 			Description: service.Description,
+			Metadata:    service.Metadata,
+			Tags:        service.Tags,
 
-			IsBindable:  true,
-			IsUpdatable: false,
+			IsBindable:  service.Bindable,
+			IsUpdatable: service.PlanUpdateable,
 		}
 
 		var planEntries [] PlanEntry
 
 		for _, plan := range service.Plans {
+			var costs []CostEntry
+			for _, cost := range plan.Metadata.Costs {
+				costs = append(costs, CostEntry{Amount: cost.Amount, Unit: cost.Unit})
+			}
+
 			planEntry := PlanEntry{
 				Id:   plan.Id,
 				Name: plan.Name,
 
 				Description: plan.Description,
+				Metadata: PlanMetadataEntry{Costs: costs, Bullets: plan.Metadata.Bullets},
 
-				IsFree:     true,
-				IsBindable: true,
+				IsFree:     plan.Free,
+				IsBindable: plan.Bindable,
 			}
-
 			planEntries = append(planEntries, planEntry)
 		}
 
@@ -353,7 +372,10 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	if payload == nil {
 		w.Write([]byte("{}"))
 	} else {
-		response, _ := json.Marshal(payload)
+		response, err := json.Marshal(payload)
+		if err != nil{
+			fmt.Println(err)
+		}
 		w.Write(response)
 	}
 }

@@ -16,12 +16,12 @@ type CatalogService struct {
 	Name        string `yaml:"_name"`
 	Description string `yaml:"description"`
 
-	tags        	 []string			`yaml:"tags"`
-	requires    	 []string			`yaml:"requires"`
-	bindable    	 bool				`yaml:"bindable"`
-	metadata    	 serviceMetadata		`yaml:"metadata"`
-	dashboard_client dashboardClient		`yaml:"dashboard_client"`
-	plan_updateable  bool				`yaml:"plan_updateable"`
+	Tags        	 []string		`yaml:"tags"`
+	Requires    	 []string		`yaml:"requires"`
+	Bindable    	 bool			`yaml:"bindable"`
+	Metadata    	 map[string]string	`yaml:"metadata"`
+	DashboardClient  map[string]string	`yaml:"dashboard_client"`
+	PlanUpdateable   bool			`yaml:"plan_updateable"`
 
 	Chart        string            `yaml:"chart"`
 	ChartVersion string            `yaml:"chart-version"`
@@ -32,20 +32,14 @@ type CatalogService struct {
 	Plans []CatalogPlan `yaml:"plans"`
 }
 
-type dashboardClient struct {
-	id		string		`yaml:"id"`
-	secret  	string		`yaml:"secret"`
-	redirect_uri	string		`yaml:"redirect_uri"`
-}
-
 type CatalogPlan struct {
 	Id          string `yaml:"_id"`
 	Name        string `yaml:"_name"`
 	Description string `yaml:"description"`
 
-	free        bool 			`yaml:"free"`
-	bindable    bool			`yaml:"bindable"`
-	metadata    map[string]interface{}	`yaml:"metadata"`
+	Free        bool 			`yaml:"free"`
+	Bindable    bool			`yaml:"bindable"`
+	Metadata    PlanMetadata		`yaml:"metadata"`
 
 	Chart        string            `yaml:"chart"`
 	ChartVersion string            `yaml:"chart-version"`
@@ -54,13 +48,14 @@ type CatalogPlan struct {
 	UserCredentials map[string]interface{} `yaml:"user-credentials"`
 }
 
-type serviceMetadata struct {
-	displayName		string		`yaml:"displayName"`
-	imageUrl		string		`yaml:"imageUrl"`
-	longDescription		string 		`yaml:"longDescription"`
-	providerDisplayName	string		`yaml:"providerDisplayName"`
-	documentationUrl	string		`yaml:"documentationUrl"`
-	supportUrl		string		`yaml:"supportUrl"`
+type PlanMetadata struct {
+	Costs    []Cost		`yaml:"costs"`
+	Bullets  []string	`yaml:"bullets"`
+}
+
+type Cost struct {
+	Amount    map[string]string	`yaml:"amount"`
+	Unit      string		`yaml:"unit"`
 }
 
 func (c *Catalog) Parse(path string) {
