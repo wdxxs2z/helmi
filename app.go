@@ -92,6 +92,8 @@ func (a *App) getCatalog(w http.ResponseWriter, r *http.Request) {
 		Name        string `json:"name"`
 		Description string `json:"description"`
 
+		metadata    map[string]string	`json:"metadata"`
+
 		IsFree      bool `json:"free"`
 		IsBindable  bool `json:"bindable"`
 	}
@@ -100,6 +102,9 @@ func (a *App) getCatalog(w http.ResponseWriter, r *http.Request) {
 		Id          string `json:"id"`
 		Name        string `json:"name"`
 		Description string `json:"description"`
+
+		Tags        []string 		`json:"tags"`
+		metadata    map[string]string 	`json:"metadata"`
 
 		IsBindable  bool `json:"bindable"`
 		IsUpdatable bool `json:"plan_updateable"`

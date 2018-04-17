@@ -16,6 +16,13 @@ type CatalogService struct {
 	Name        string `yaml:"_name"`
 	Description string `yaml:"description"`
 
+	tags        	 []string			`yaml:"tags"`
+	requires    	 []string			`yaml:"requires"`
+	bindable    	 bool				`yaml:"bindable"`
+	metadata    	 serviceMetadata		`yaml:"metadata"`
+	dashboard_client dashboardClient		`yaml:"dashboard_client"`
+	plan_updateable  bool				`yaml:"plan_updateable"`
+
 	Chart        string            `yaml:"chart"`
 	ChartVersion string            `yaml:"chart-version"`
 	ChartValues  map[string]string `yaml:"chart-values"`
@@ -25,16 +32,35 @@ type CatalogService struct {
 	Plans []CatalogPlan `yaml:"plans"`
 }
 
+type dashboardClient struct {
+	id		string		`yaml:"id"`
+	secret  	string		`yaml:"secret"`
+	redirect_uri	string		`yaml:"redirect_uri"`
+}
+
 type CatalogPlan struct {
 	Id          string `yaml:"_id"`
 	Name        string `yaml:"_name"`
 	Description string `yaml:"description"`
+
+	free        bool 			`yaml:"free"`
+	bindable    bool			`yaml:"bindable"`
+	metadata    map[string]interface{}	`yaml:"metadata"`
 
 	Chart        string            `yaml:"chart"`
 	ChartVersion string            `yaml:"chart-version"`
 	ChartValues  map[string]string `yaml:"chart-values"`
 
 	UserCredentials map[string]interface{} `yaml:"user-credentials"`
+}
+
+type serviceMetadata struct {
+	displayName		string		`yaml:"displayName"`
+	imageUrl		string		`yaml:"imageUrl"`
+	longDescription		string 		`yaml:"longDescription"`
+	providerDisplayName	string		`yaml:"providerDisplayName"`
+	documentationUrl	string		`yaml:"documentationUrl"`
+	supportUrl		string		`yaml:"supportUrl"`
 }
 
 func (c *Catalog) Parse(path string) {

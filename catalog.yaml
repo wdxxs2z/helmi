@@ -2,6 +2,18 @@
   _id: ab53df4d-c279-4880-94f7-65e7d72b7834
   _name: mariadb
   description: "MariaDB as a Service"
+  bindable: true
+  plan_updatable: true
+  tags:
+  - mysql
+  - mariadb
+  metadata:
+    displayName: "Kubernetes Helm Mariadb Service"
+    imageUrl: https://mariadb.org/wp-content/uploads/2015/05/MariaDB-Foundation-horizontal-x52.png
+    longDescription: "Kubernetes Helm Mariadb Service"
+    providerDisplayName: "Kubernetes Helm Mariadb Service"
+    documentationUrl: https://github.com/kubernetes/charts/tree/master/stable/mariadb
+    supportUrl: https://mariadb.org/
   chart: stable/mariadb
   chart-version: 1.0.7
   chart-values:
@@ -22,6 +34,15 @@
     _id: e79306ef-4e10-4e3d-b38e-ffce88c90f59
     _name: free
     description: "Free MariaDB Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+      - amount:
+          usd: 0.0
+        unit: MONTHLY
+      bullets:
+      - Single node mariadb service
     chart-values:
         persistence.size: 8Gi
         persistence.storageClass: local-storage
@@ -56,6 +77,18 @@
   _id: 2f1e7c63-0511-4209-aa7f-6bdee7ffb2b6
   _name: "rabbitmq"
   description: "RabbitMQ as a Service"
+  bindable: true
+  plan_updatable: true
+  tags:
+  - rabbitmq
+  - mq
+  metadata:
+    displayName: "Kubernetes Helm RabbitMQ Service"
+    imageUrl: ""
+    longDescription: "Kubernetes Helm RabbitMQ Service"
+    providerDisplayName: "Kubernetes Helm RabbitMQ Service"
+    documentationUrl: https://github.com/kubernetes/charts/tree/master/stable/rabbitmq
+    supportUrl: https://mariadb.org/
   chart: stable/rabbitmq
   chart-version: 0.6.8
   chart-values:
@@ -74,6 +107,15 @@
     _id: d2badac0-8e41-4588-a9fc-0e662c480610
     _name: free
     description: "Free RabbitMQ Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+      - amount:
+          usd: 0.0
+        unit: MONTHLY
+      bullets:
+      - Single node rabbitmq service
     chart-values:
       persistence.size: 8Gi
       persistence.storageClass: local-storage
@@ -81,6 +123,18 @@
   _id: b4280104-b578-4156-a69c-8961bcdfa8c0
   _name: "mongodb"
   description: "MongoDB as a Service"
+  bindable: true
+  plan_updatable: true
+  tags:
+  - mongodb
+  - nosql
+  metadata:
+    displayName: "Kubernetes Helm Mongodb Service"
+    imageUrl: "https://webassets.mongodb.com/_com_assets/global/mongodb-logo-white.png"
+    longDescription: "Kubernetes Helm Mongodb Service"
+    providerDisplayName: "Kubernetes Helm Mongodb Service"
+    documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/mongodb"
+    supportUrl: "https://www.mongodb.com/"
   chart: stable/mongodb
   chart-version: 0.4.9
   chart-values:
@@ -100,6 +154,15 @@
     _id: 905b1f0e-c815-41d4-b3e4-6ccb602b9e8e
     _name: free
     description: "Free MongoDB Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+      - amount:
+          usd: 0.0
+        unit: MONTHLY
+      bullets:
+      - Single node mongodb service
     chart-values:
       persistence.size: 8Gi
       persistence.storageClass: local-storage
@@ -107,6 +170,18 @@
   _id: c26e6c7a-fe17-4568-ac4c-46545ab1d178
   _name: "redis"
   description: "Redis as a Service"
+  bindable: true
+  plan_updatable: true
+  tags:
+  - redis
+  - key value database
+  metadata:
+    displayName: "Kubernetes Helm Redis Service"
+    imageUrl: "https://redis.io/images/redis-white.png"
+    longDescription: "Kubernetes Helm Redis Service"
+    providerDisplayName: "Kubernetes Helm Redis Service"
+    documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/redis"
+    supportUrl: "https://redis.io/"
   chart: stable/redis
   chart-version: 0.9.0
   chart-values:
@@ -121,6 +196,15 @@
     _id: 381c8dd1-676b-4d1f-ae00-97e8304f966f
     _name: free
     description: "Free Redis Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+      - amount:
+          usd: 0.0
+        unit: MONTHLY
+      bullets:
+      - Single node redis service
     chart-values:
       persistence.size: 8Gi
       persistence.storageClass: local-storage
