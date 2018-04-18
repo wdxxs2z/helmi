@@ -128,11 +128,100 @@ f003f191-c250-4e85-9abd-038af629ad71   free             helmi-service-broker   8
 Create service instance with parameters
 
 ```
+# kubectl create -f example/service_instance.yaml
+
+# kubectl describe ServiceInstance mariadb-service-instance
+Name:         mariadb-service-instance
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+API Version:  servicecatalog.k8s.io/v1beta1
+Kind:         ServiceInstance
+Metadata:
+  Creation Timestamp:  2018-04-18T06:14:34Z
+  Finalizers:
+    kubernetes-incubator/service-catalog
+  Generation:        1
+  Resource Version:  342
+  Self Link:         /apis/servicecatalog.k8s.io/v1beta1/namespaces/default/serviceinstances/mariadb-service-instance
+  UID:               c395937b-42cf-11e8-829a-0a580ac80210
+Spec:
+  Cluster Service Class External Name:  mariadb
+  Cluster Service Class Ref:
+    Name:                              ab53df4d-c279-4880-94f7-65e7d72b7834
+  Cluster Service Plan External Name:  free
+  Cluster Service Plan Ref:
+    Name:           e79306ef-4e10-4e3d-b38e-ffce88c90f59
+  External ID:      398113a7-5c3a-4260-bba9-208817ee611c
+  Update Requests:  0
+Status:
+  Async Op In Progress:  false
+  Conditions:
+    Last Transition Time:  2018-04-18T06:15:36Z
+    Message:               The instance was provisioned successfully
+    Reason:                ProvisionedSuccessfully
+    Status:                True
+    Type:                  Ready
+  Deprovision Status:      Required
+  External Properties:
+    Cluster Service Plan External ID:    e79306ef-4e10-4e3d-b38e-ffce88c90f59
+    Cluster Service Plan External Name:  free
+  Orphan Mitigation In Progress:         false
+  Reconciled Generation:                 1
+Events:
+  Type    Reason                   Age   From                                Message
+  ----    ------                   ----  ----                                -------
+  Normal  Provisioning             20m   service-catalog-controller-manager  The instance is being provisioned asynchronously
+  Normal  ProvisionedSuccessfully  19m   service-catalog-controller-manager  The instance was provisioned successfully
 ```
 
 Bind a service instance
 
 ```
+# kubectl create -f example/service_bind.yaml
+
+# kubectl describe ServiceBinding springmusic-mariadb-binding 
+Name:         springmusic-mariadb-binding
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+API Version:  servicecatalog.k8s.io/v1beta1
+Kind:         ServiceBinding
+Metadata:
+  Creation Timestamp:  2018-04-18T06:19:46Z
+  Finalizers:
+    kubernetes-incubator/service-catalog
+  Generation:        1
+  Resource Version:  346
+  Self Link:         /apis/servicecatalog.k8s.io/v1beta1/namespaces/default/servicebindings/springmusic-mariadb-binding
+  UID:               7dc6335c-42d0-11e8-829a-0a580ac80210
+Spec:
+  External ID:  a61f20b3-5db9-4959-b962-b8a03e30d724
+  Instance Ref:
+    Name:       mariadb-service-instance
+  Secret Name:  springmusic-mariadb-credentials
+Status:
+  Async Op In Progress:  false
+  Conditions:
+    Last Transition Time:  2018-04-18T06:19:48Z
+    Message:               Injected bind result
+    Reason:                InjectedBindResult
+    Status:                True
+    Type:                  Ready
+  External Properties:
+  Orphan Mitigation In Progress:  false
+  Reconciled Generation:          1
+  Unbind Status:                  Required
+Events:
+  Type    Reason              Age   From                                Message
+  ----    ------              ----  ----                                -------
+  Normal  InjectedBindResult  13m   service-catalog-controller-manager  Injected bind result
+```
+
+Lunch an app
+
+```
+#kubectl create -f example/app.yaml
 ```
 
 ## Use in Cloud Foundry
