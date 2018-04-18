@@ -117,8 +117,8 @@
     "pkg/helm",
     "pkg/kubectl"
   ]
-  revision = "0cec874307275c97f7ff07e403541abba95b77f5"
-  version = "18.12.2"
+  revision = "e080adc0296118d2d35894d7090d4976a56c20f9"
+  version = "18.16.1"
 
 [[projects]]
   name = "github.com/rs/cors"
@@ -174,12 +174,13 @@
   name = "golang.org/x/net"
   packages = [
     "context",
+    "http/httpguts",
     "http2",
     "http2/hpack",
     "idna",
     "lex/httplex"
   ]
-  revision = "500e7a4f953ddaf55d316b4d3adc516aa0379622"
+  revision = "84348c2dc81a524fe94aaea3e3d9f967135338ef"
 
 [[projects]]
   branch = "master"
@@ -188,7 +189,7 @@
     "unix",
     "windows"
   ]
-  revision = "2281fa97ef7b0c26324634d5a22f04babdac8713"
+  revision = "b126b21c05a91c856b027c16779c12e3bf236954"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -262,7 +263,7 @@
     "storage/v1alpha1",
     "storage/v1beta1"
   ]
-  revision = "6fb8575d8ac324ad9f9605dec64b7a4b8a632e79"
+  revision = "e68f57a7c005317989301f4e8eb654f01f08eb05"
 
 [[projects]]
   branch = "master"
@@ -304,7 +305,7 @@
     "pkg/watch",
     "third_party/forked/golang/reflect"
   ]
-  revision = "ba81bc69c72dde92d5f1fefa2fa6d82aa83a6676"
+  revision = "800fcb029b488923f14852306f0c98c11d0f360c"
 
 [[projects]]
   name = "k8s.io/client-go"

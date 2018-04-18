@@ -8,6 +8,7 @@ replicaCount: 1
 serviceType: ClusterIP
 
 helmi:
+  url: http://helmi-service-broker.k8s.io
   username: admin
   password: helmi
   repo_url:

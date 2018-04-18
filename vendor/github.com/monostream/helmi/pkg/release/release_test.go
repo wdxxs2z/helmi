@@ -39,6 +39,7 @@ var cs = catalog.CatalogService{
 		"key": "{{ lookup('value', 'foo') }}",
 		"hostname": "{{ lookup('cluster', 'address') }}",
 		"port": "{{ lookup('cluster', 'port') }}",
+		"namespace": "{{ lookup('release', 'namespace') }}",
 	},
 
 	Plans: []catalog.CatalogPlan{
@@ -55,6 +56,8 @@ var nodes = [] kubectl.Node {
 	},
 }
 var status = helm.Status{
+	Name:       "test_release",
+	Namespace:  "test_namespace",
 	IsFailed:   false,
 	IsDeployed: true,
 
@@ -131,5 +134,8 @@ func Test_GetUserCredentials(t *testing.T) {
 	}
 	if values["port"] != "30001" {
 		t.Error(red("incorrect port value returned"))
+	}
+	if values["namespace"] != "test_namespace" {
+		t.Error(red("incorrect release value returned"))
 	}
 }

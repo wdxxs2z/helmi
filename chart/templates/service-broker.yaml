@@ -1,0 +1,25 @@
+apiVersion: servicecatalog.k8s.io/v1beta1
+kind: ClusterServiceBroker
+metadata:
+  name: helmi-service-broker
+  labels:
+      chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
+spec:
+  url: {{ .Values.helmi.url }}
+  authInfo:
+    basic:
+      secretRef:
+        namespace: {{ .Release.Namespace }}
+        name: helmi-broker-auth
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: helmi-broker-auth
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+data:
+  username: {{ .Values.helmi.username | b64enc }}
+  password: {{ .Values.helmi.password | b64enc }}

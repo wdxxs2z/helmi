@@ -13,6 +13,8 @@ import (
 )
 
 type Status struct {
+	Name       string
+	Namespace  string
 	IsFailed   bool
 	IsDeployed bool
 
@@ -122,6 +124,7 @@ func GetStatus(release string) (Status, error) {
 
 	const ResourcePrefix = "==> "
 
+	const NamespacePrefix = "NAMESPACE: "
 	const DeploymentTimePrefix = "LAST DEPLOYED: "
 
 	const DesiredLabel = "DESIRED"
@@ -136,6 +139,9 @@ func GetStatus(release string) (Status, error) {
 	columnCurrent := -1
 	columnAvailable := -1
 	columnPort := -1
+
+	// our name
+	status.Name = release
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -159,6 +165,11 @@ func GetStatus(release string) (Status, error) {
 
 		if strings.HasPrefix(line, ResourcePrefix) {
 			lastResource = strings.TrimPrefix(line, ResourcePrefix)
+		}
+
+		// namespace
+		if strings.HasPrefix(line, NamespacePrefix) {
+			status.Namespace = strings.TrimPrefix(line, NamespacePrefix)
 		}
 
 		// deployment time
