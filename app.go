@@ -89,6 +89,24 @@ func auth(handler http.HandlerFunc) http.HandlerFunc {
 
 func (a *App) getCatalog(w http.ResponseWriter, r *http.Request) {
 
+	type CreateUpdateSchemaObjectEntry struct {
+		Parameters map[string]string			`json:"parameters"`
+	}
+
+	type ServiceBindingSchemaObjectEntry struct {
+		Create	CreateUpdateSchemaObjectEntry			`json:"create"`
+	}
+
+	type ServiceInstanceSchemaObjectEntry struct {
+		Create	CreateUpdateSchemaObjectEntry			`json:"create"`
+		Update  CreateUpdateSchemaObjectEntry			`json:"update"`
+	}
+
+	type SchemasObjectEntry struct {
+		ServiceInstance	 ServiceInstanceSchemaObjectEntry	`json:"service_instance"`
+		ServiceBinding	 ServiceBindingSchemaObjectEntry	`json:"service_binding"`
+	}
+
 	type CostEntry struct {
 		Amount    map[string]string	`json:"amount"`
 		Unit      string		`json:"unit"`
@@ -105,6 +123,8 @@ func (a *App) getCatalog(w http.ResponseWriter, r *http.Request) {
 		Description string `json:"description"`
 
 		Metadata    PlanMetadataEntry	`json:"metadata"`
+
+		Schemas     SchemasObjectEntry  `json:"schemas"`
 
 		IsFree      bool `json:"free"`
 		IsBindable  bool `json:"bindable"`
@@ -151,12 +171,27 @@ func (a *App) getCatalog(w http.ResponseWriter, r *http.Request) {
 				costs = append(costs, CostEntry{Amount: cost.Amount, Unit: cost.Unit})
 			}
 
+			parameters := map[string]string{}
+			for key, value := range plan.ChartValues {
+				parameters[key] = value
+			}
+
 			planEntry := PlanEntry{
 				Id:   plan.Id,
 				Name: plan.Name,
 
 				Description: plan.Description,
 				Metadata: PlanMetadataEntry{Costs: costs, Bullets: plan.Metadata.Bullets},
+
+				Schemas: SchemasObjectEntry{
+					ServiceInstance: ServiceInstanceSchemaObjectEntry{
+						Create: CreateUpdateSchemaObjectEntry{Parameters: parameters},
+						Update: CreateUpdateSchemaObjectEntry{Parameters: parameters},
+					},
+					ServiceBinding: ServiceBindingSchemaObjectEntry{
+						Create: CreateUpdateSchemaObjectEntry{Parameters: parameters},
+					},
+				},
 
 				IsFree:     plan.Free,
 				IsBindable: plan.Bindable,

@@ -95,6 +95,7 @@ catalog:
           persistence.enabled: false
           persistence.size: 8Gi
           persistence.storageClass: local-storage
+          serviceType: ClusterIP
   -
     _id: 8dda5a6f-f796-4b52-806f-4129d7576d6e
     _name: minio

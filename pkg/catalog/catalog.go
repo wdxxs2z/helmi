@@ -40,6 +40,7 @@ type CatalogPlan struct {
 	Free        bool 			`yaml:"free"`
 	Bindable    bool			`yaml:"bindable"`
 	Metadata    PlanMetadata		`yaml:"metadata"`
+	Schemas     SchemasObject		`yaml:"schemas"`
 
 	Chart        string            `yaml:"chart"`
 	ChartVersion string            `yaml:"chart-version"`
@@ -52,6 +53,25 @@ type PlanMetadata struct {
 	Costs    []Cost		`yaml:"costs"`
 	Bullets  []string	`yaml:"bullets"`
 }
+
+type SchemasObject struct {
+	ServiceInstance	 ServiceInstanceSchemaObject		`yaml:"service_instance"`
+	ServiceBinding	 ServiceBindingSchemaObject		`yaml:"service_binding"`
+}
+
+type ServiceInstanceSchemaObject struct {
+	Create	CreateUpdateSchemaObject		`yaml:"create"`
+	Update  CreateUpdateSchemaObject		`yaml:"update"`
+}
+
+type ServiceBindingSchemaObject struct {
+	Create	CreateUpdateSchemaObject		`yaml:"create"`
+}
+
+type CreateUpdateSchemaObject struct {
+	Parameters map[string]interface{}		`yaml:"parameters"`
+}
+
 
 type Cost struct {
 	Amount    map[string]string	`yaml:"amount"`
