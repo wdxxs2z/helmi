@@ -6,3 +6,5 @@ metadata:
 spec:
   clusterServiceClassExternalName: mariadb
   clusterServicePlanExternalName: free
+  parameters:
+    serviceType: NodePort

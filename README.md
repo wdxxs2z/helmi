@@ -86,143 +86,49 @@ curl -k 'https://helmi-service-broker.k8s.io/v2/service_instances/3b2e7d2c915242
 -H 'Content-Type: application/x-www-form-urlencoded' \
 -u 'admin:helmi'
 ```
-## Use in Kubernetes
+## Use in Kubernetes example
 
-If we install it with helm, we can list the service broker on kubernetes
-
+* If we install it with helm, we can list the service broker on kubernetes
 ```
 # kubectl get clusterservicebroker
 NAME                   URL
 helmi-service-broker   http://helmi-service-broker.k8s.io
 ```
 
-List the service class
-
+* List the service class
 ```
 # kubectl get clusterserviceclasses
-NAME                                   EXTERNAL NAME      BROKER                 BINDABLE   PLAN UPDATABLE
-201cb950-e640-4453-9d91-4708ea0a1342   cassandra          helmi-service-broker   true      false
-2f1e7c63-0511-4209-aa7f-6bdee7ffb2b6   rabbitmq           helmi-service-broker   true      false
-777f5478-5796-426a-ab8a-5d3dc5e1bdcc   muescheli          helmi-service-broker   true      false
-8dda5a6f-f796-4b52-806f-4129d7576d6e   minio              helmi-service-broker   true      false
-ab53df4d-c279-4880-94f7-65e7d72b7834   mariadb            helmi-service-broker   true      false
-b4280104-b578-4156-a69c-8961bcdfa8c0   mongodb            helmi-service-broker   true      false
-c26e6c7a-fe17-4568-ac4c-46545ab1d178   redis              helmi-service-broker   true      false
 ```
 
-List the service plans
-
+* List the service plans
 ```
 # kubectl get clusterserviceplans
-NAME                                   EXTERNAL NAME    BROKER                 CLASS
-169d5466-12c9-4a89-a063-f72048b3d4c4   free             helmi-service-broker   201cb950-e640-4453-9d91-4708ea0a1342
-381c8dd1-676b-4d1f-ae00-97e8304f966f   free             helmi-service-broker   c26e6c7a-fe17-4568-ac4c-46545ab1d178
-75b7b1de-70ef-4499-b55c-e2337d320626   free             helmi-service-broker   777f5478-5796-426a-ab8a-5d3dc5e1bdcc
-7b16d6aa-260a-4b8d-b12c-464d2cedb9d0   dev              helmi-service-broker   201cb950-e640-4453-9d91-4708ea0a1342
-905b1f0e-c815-41d4-b3e4-6ccb602b9e8e   free             helmi-service-broker   b4280104-b578-4156-a69c-8961bcdfa8c0
-d2badac0-8e41-4588-a9fc-0e662c480610   free             helmi-service-broker   2f1e7c63-0511-4209-aa7f-6bdee7ffb2b6
-e79306ef-4e10-4e3d-b38e-ffce88c90f59   free             helmi-service-broker   ab53df4d-c279-4880-94f7-65e7d72b7834
-f003f191-c250-4e85-9abd-038af629ad71   free             helmi-service-broker   8dda5a6f-f796-4b52-806f-4129d7576d6e
 ```
 
-Create service instance with parameters
+* Create service instance with parameters
 
+**Note:** the service instance may contain some parameters,and the parameter should be defined in your helm repo chart.
 ```
 # kubectl create -f example/service_instance.yaml
 
 # kubectl describe ServiceInstance mariadb-service-instance
-Name:         mariadb-service-instance
-Namespace:    default
-Labels:       <none>
-Annotations:  <none>
-API Version:  servicecatalog.k8s.io/v1beta1
-Kind:         ServiceInstance
-Metadata:
-  Creation Timestamp:  2018-04-18T06:14:34Z
-  Finalizers:
-    kubernetes-incubator/service-catalog
-  Generation:        1
-  Resource Version:  342
-  Self Link:         /apis/servicecatalog.k8s.io/v1beta1/namespaces/default/serviceinstances/mariadb-service-instance
-  UID:               c395937b-42cf-11e8-829a-0a580ac80210
-Spec:
-  Cluster Service Class External Name:  mariadb
-  Cluster Service Class Ref:
-    Name:                              ab53df4d-c279-4880-94f7-65e7d72b7834
-  Cluster Service Plan External Name:  free
-  Cluster Service Plan Ref:
-    Name:           e79306ef-4e10-4e3d-b38e-ffce88c90f59
-  External ID:      398113a7-5c3a-4260-bba9-208817ee611c
-  Update Requests:  0
-Status:
-  Async Op In Progress:  false
-  Conditions:
-    Last Transition Time:  2018-04-18T06:15:36Z
-    Message:               The instance was provisioned successfully
-    Reason:                ProvisionedSuccessfully
-    Status:                True
-    Type:                  Ready
-  Deprovision Status:      Required
-  External Properties:
-    Cluster Service Plan External ID:    e79306ef-4e10-4e3d-b38e-ffce88c90f59
-    Cluster Service Plan External Name:  free
-  Orphan Mitigation In Progress:         false
-  Reconciled Generation:                 1
-Events:
-  Type    Reason                   Age   From                                Message
-  ----    ------                   ----  ----                                -------
-  Normal  Provisioning             20m   service-catalog-controller-manager  The instance is being provisioned asynchronously
-  Normal  ProvisionedSuccessfully  19m   service-catalog-controller-manager  The instance was provisioned successfully
 ```
 
-Bind a service instance
-
+* Bind a service instance
 ```
 # kubectl create -f example/service_bind.yaml
 
 # kubectl describe ServiceBinding springmusic-mariadb-binding 
-Name:         springmusic-mariadb-binding
-Namespace:    default
-Labels:       <none>
-Annotations:  <none>
-API Version:  servicecatalog.k8s.io/v1beta1
-Kind:         ServiceBinding
-Metadata:
-  Creation Timestamp:  2018-04-18T06:19:46Z
-  Finalizers:
-    kubernetes-incubator/service-catalog
-  Generation:        1
-  Resource Version:  346
-  Self Link:         /apis/servicecatalog.k8s.io/v1beta1/namespaces/default/servicebindings/springmusic-mariadb-binding
-  UID:               7dc6335c-42d0-11e8-829a-0a580ac80210
-Spec:
-  External ID:  a61f20b3-5db9-4959-b962-b8a03e30d724
-  Instance Ref:
-    Name:       mariadb-service-instance
-  Secret Name:  springmusic-mariadb-credentials
-Status:
-  Async Op In Progress:  false
-  Conditions:
-    Last Transition Time:  2018-04-18T06:19:48Z
-    Message:               Injected bind result
-    Reason:                InjectedBindResult
-    Status:                True
-    Type:                  Ready
-  External Properties:
-  Orphan Mitigation In Progress:  false
-  Reconciled Generation:          1
-  Unbind Status:                  Required
-Events:
-  Type    Reason              Age   From                                Message
-  ----    ------              ----  ----                                -------
-  Normal  InjectedBindResult  13m   service-catalog-controller-manager  Injected bind result
 ```
 
-Lunch an app
-
+* Lunch an app
 ```
 #kubectl create -f example/app.yaml
 ```
+
+* View the spring music application
+
+![application-spring-music](docs/app.JPG)
 
 ## Use in Cloud Foundry
 
