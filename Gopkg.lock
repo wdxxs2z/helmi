@@ -8,6 +8,12 @@
   version = "v0.21.0"
 
 [[projects]]
+  branch = "master"
+  name = "code.cloudfoundry.org/lager"
+  packages = ["."]
+  revision = "25ee72f227fe10c5671d8a99d05a2faf388ccfeb"
+
+[[projects]]
   name = "github.com/Azure/go-autorest"
   packages = [
     "autorest",
@@ -156,6 +162,15 @@
   ]
   revision = "e080adc0296118d2d35894d7090d4976a56c20f9"
   version = "18.16.1"
+
+[[projects]]
+  name = "github.com/pivotal-cf/brokerapi"
+  packages = [
+    ".",
+    "auth"
+  ]
+  revision = "b763fb58cdae010fb90a94387db218c95967f0d5"
+  version = "v2.0.0"
 
 [[projects]]
   name = "github.com/rs/cors"
@@ -440,6 +455,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "379396c0968cab537fa3d1c19a5bbe9c8a84e4737ee9296ea04917db376a143c"
+  inputs-digest = "a4bc0ed2b6ff363928d6fdf65c0eb05a60bb6e29793b39ffef8aa5bc8acb28f2"
   solver-name = "gps-cdcl"
   solver-version = 1

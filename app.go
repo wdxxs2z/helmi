@@ -108,8 +108,8 @@ func (a *App) getCatalog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type CostEntry struct {
-		Amount    map[string]string	`json:"amount"`
-		Unit      string		`json:"unit"`
+		Amount    map[string]interface{}	`json:"amount"`
+		Unit      string			`json:"unit"`
 	}
 
 	type PlanMetadataEntry struct {
