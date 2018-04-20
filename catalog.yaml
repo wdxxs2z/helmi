@@ -1,6 +1,7 @@
 log_level: DEBUG
 username: admin
 password: helmi
+platform: kubernetes
 helmi_config:
   allow_user_provision_parameters: true
   allow_user_update_parameters: true

@@ -3,7 +3,6 @@ package catalog
 import (
 	"log"
 	"strings"
-	"io/ioutil"
 	"gopkg.in/yaml.v2"
 	"fmt"
 )
@@ -108,18 +107,9 @@ func (sp CatalogPlan) Validate() error {
 	return nil
 }
 
-func (c *Catalog) Parse(path string) {
-	input, err := ioutil.ReadFile(path)
+func (c *Catalog) Parse(rawData []byte) {
 
-	if err != nil {
-		log.Printf("Catalog.Read: #%v ", err)
-	}
-
-	// insert fake root to allow parsing
-	data := "services:\n" + string(input)
-	input = []byte(data)
-
-	err = yaml.Unmarshal(input, c)
+	err := yaml.Unmarshal(rawData, c)
 
 	if err != nil {
 		log.Fatalf("Catalog.Unmarshal: %v", err)

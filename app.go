@@ -20,8 +20,8 @@ type App struct {
 	Router *mux.Router
 }
 
-func (a *App) Initialize(path string) {
-	a.Catalog.Parse(path)
+func (a *App) Initialize(rawData []byte) {
+	a.Catalog.Parse(rawData)
 
 	a.Router = mux.NewRouter()
 	a.initializeRoutes()

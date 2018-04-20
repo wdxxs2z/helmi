@@ -8,6 +8,7 @@ import (
 	"strings"
 	"net/http"
 
+	"gopkg.in/yaml.v2"
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
 
@@ -51,6 +52,31 @@ func main() {
 		log.Fatalf("Error loading config file: %s", err)
 	}
 
+	if config.Platform == "kubernetes" {
+		runAsKubernetes(config)
+	}
+
+	if config.Platform == "cloudfoundry" {
+		runAsCloudfoundry(config)
+	}
+
+}
+
+func runAsKubernetes(config *Config) {
+	a := App{}
+
+	out ,err := yaml.Marshal(config.HelmiConfig.Catalog)
+
+	if err != nil {
+		log.Fatalf("Error parse helmi yaml config: %s", err)
+	}
+
+	a.Initialize(out)
+	a.Run(":" + port)
+}
+
+func runAsCloudfoundry(config *Config) {
+
 	logger := buildLogger(config.LogLevel)
 
 	helmibroker := broker.New(config.HelmiConfig, logger)
@@ -65,21 +91,4 @@ func main() {
 
 	fmt.Println("Helm Service Broker started on port " + port + "...")
 	http.ListenAndServe(":"+port, nil)
-
-	//a := App{}
-	//
-	//path, _ := filepath.Abs("./catalog.yaml")
-	//
-	//port := os.Getenv("PORT")
-	//
-	//if len(port) == 0 {
-	//	port = "5000"
-	//}
-	//
-	//a.Initialize(path)
-	//a.Run(":" + port)
-}
-
-func livenessCheck(w http.ResponseWriter, r *http.Request) {
-	respondWithJSON(w, http.StatusOK, nil)
 }
