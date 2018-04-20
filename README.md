@@ -56,6 +56,9 @@ Configure the values.
 
 Install the helmi release.
 
+**Note** if you want register the broker to cloudfoundry,please modify the values: platform -> cloudfoundry.If you want register
+this to service-catalog,modify the values: platform -> kubernetes.
+
 ```
 helm install -n helmi-core --namespace helmi-system .
 ```
