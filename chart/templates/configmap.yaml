@@ -4,7 +4,7 @@ metadata:
   name: {{ template "fullname" . }}-catalog
 data:
   catalog.yaml:
-{{ toYaml .Values.catalog | indent 4 }}
+{{ toYaml .Values.service_config | indent 4 }}
   kubeconfig.yaml:
     apiVersion: v1
     kind: Config

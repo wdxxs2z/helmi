@@ -29,7 +29,7 @@ var (
 
 func init() {
 	flag.StringVar(&configpath, "config", "", "The helmi config path")
-	flag.StringVar(&port, "port", "3000", "Listen port")
+	flag.StringVar(&port, "port", "5000", "Listen port")
 }
 
 func buildLogger(logLevel string) lager.Logger {
@@ -54,12 +54,11 @@ func main() {
 
 	if config.Platform == "kubernetes" {
 		runAsKubernetes(config)
-	}
-
-	if config.Platform == "cloudfoundry" {
+	} else if config.Platform == "cloudfoundry" {
 		runAsCloudfoundry(config)
+	} else {
+		log.Fatalf("Only support kubernetes and cloudfoundry plarform")
 	}
-
 }
 
 func runAsKubernetes(config *Config) {
