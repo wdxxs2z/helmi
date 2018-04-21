@@ -3,7 +3,7 @@ Open Service Broker API Implementation using helm &amp; kubectl
 
 ![alt Logo](docs/logo.png)
 
-## Start locally
+## Start locally (Dev)
 
 ```console
 # start minikube
@@ -18,10 +18,10 @@ cd ${GOPATH:-~/go}/src/github.com/monostream/helmi
 go build
 
 # run helmi
-./helmi
+./helmi -config catalog.yaml
 ```
 
-## Start on kubernetes
+## Start on kubernetes (Test)
 
 ```console
 # create serviceaccount, clusterrolebinding, deployment, service and an optional secret for basic authorization
@@ -40,7 +40,7 @@ or
 curl --user {username}:{password} http://$(kubernetes ip):30000/v2/catalog
 ```
 
-## Start with kube helm
+## Start with kube helm (Current)
 
 Configure the values.
 
@@ -53,6 +53,8 @@ Configure the values.
 | `ingress.hosts`|The helmi ingress hosts.|""|
 | `kubeconfig.*`|Must set the kubeconfig.|""|
 | `tls.cacert`|Must set the kube ca cert.|""|
+| `service_config.platform`|Must set the register platform.|"kubernetes"|
+| `service_config.services.*`|Support backend services|"mariadb,redis,mongodb,minio,rabbitmq,cassandra"|
 
 Install the helmi release.
 
