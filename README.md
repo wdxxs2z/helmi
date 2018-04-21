@@ -65,6 +65,14 @@ this to service-catalog,modify the values: platform -> kubernetes.
 helm install -n helmi-core --namespace helmi-system .
 ```
 
+Register the broker.
+
+**Note** Modify the example/service-broker.yaml ingress url and username password base64.
+
+```
+# kubectl create -f example/service-broker.yaml
+```
+
 Test the helmi url with ingress.
 
 ```

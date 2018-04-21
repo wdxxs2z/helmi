@@ -1,0 +1,21 @@
+apiVersion: servicecatalog.k8s.io/v1beta1
+kind: ClusterServiceBroker
+metadata:
+  name: helmi-service-broker
+spec:
+  url: http://helmi-service-broker.k8s.io
+  authInfo:
+    basic:
+      secretRef:
+        namespace: helmi-system
+        name: helmi-broker-auth
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: helmi-broker-auth
+  namespace: helmi-system
+type: Opaque
+data:
+  username: YWRtaW4=
+  password: aGVsbWk=
