@@ -54,22 +54,22 @@ service_config:
   services:
     mariadb:
       chart: stable/mariadb
-      chart-version: 1.0.7
+      chart_version: 1.0.7
     minio:
       chart: stable/minio
-      chart-version: 0.3.0
+      chart_version: 0.3.0
     rabbitmq:
       chart: stable/rabbitmq
-      chart-version: 0.6.8
+      chart_version: 0.6.8
     mongodb:
       chart: stable/mongodb
-      chart-version: 0.4.9
+      chart_version: 0.4.9
     redis:
       chart: stable/redis
-      chart-version: 0.9.0
+      chart_version: 0.9.0
     cassandra:
       chart: monostream/cassandra
-      chart-version: 0.2.7
+      chart_version: 0.2.7
     muescheli:
       chart: monostream/muescheli
-      chart-version: 0.1.5
+      chart_version: 0.1.5
