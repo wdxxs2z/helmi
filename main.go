@@ -64,6 +64,9 @@ func main() {
 func runAsKubernetes(config *Config) {
 	a := App{}
 
+	os.Setenv("USERNAME", config.Username)
+	os.Setenv("PASSWORD", config.Password)
+
 	out ,err := yaml.Marshal(config.HelmiConfig.Catalog)
 
 	if err != nil {
