@@ -90,62 +90,62 @@ func auth(handler http.HandlerFunc) http.HandlerFunc {
 func (a *App) getCatalog(w http.ResponseWriter, r *http.Request) {
 
 	type CreateUpdateSchemaObjectEntry struct {
-		Parameters map[string]string			`json:"parameters"`
+		Parameters 	map[string]string			`json:"parameters"`
 	}
 
 	type ServiceBindingSchemaObjectEntry struct {
-		Create	CreateUpdateSchemaObjectEntry			`json:"create"`
+		Create		CreateUpdateSchemaObjectEntry		`json:"create"`
 	}
 
 	type ServiceInstanceSchemaObjectEntry struct {
-		Create	CreateUpdateSchemaObjectEntry			`json:"create"`
-		Update  CreateUpdateSchemaObjectEntry			`json:"update"`
+		Create		CreateUpdateSchemaObjectEntry		`json:"create"`
+		Update  	CreateUpdateSchemaObjectEntry		`json:"update"`
 	}
 
 	type SchemasObjectEntry struct {
-		ServiceInstance	 ServiceInstanceSchemaObjectEntry	`json:"service_instance"`
-		ServiceBinding	 ServiceBindingSchemaObjectEntry	`json:"service_binding"`
+		ServiceInstance	ServiceInstanceSchemaObjectEntry	`json:"service_instance"`
+		ServiceBinding	ServiceBindingSchemaObjectEntry		`json:"service_binding"`
 	}
 
 	type CostEntry struct {
-		Amount    map[string]interface{}	`json:"amount"`
-		Unit      string			`json:"unit"`
+		Amount    	map[string]interface{}			`json:"amount"`
+		Unit      	string					`json:"unit"`
 	}
 
 	type PlanMetadataEntry struct {
-		Costs    []CostEntry	`json:"costs"`
-		Bullets  []string	`json:"bullets"`
+		Costs    	[]CostEntry				`json:"costs"`
+		Bullets  	[]string				`json:"bullets"`
 	}
 
 	type PlanEntry struct {
-		Id          string `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
+		Id          	string 					`json:"id"`
+		Name        	string 					`json:"name"`
+		Description 	string 					`json:"description"`
 
-		Metadata    PlanMetadataEntry	`json:"metadata"`
+		Metadata    	PlanMetadataEntry			`json:"metadata"`
 
-		Schemas     SchemasObjectEntry  `json:"schemas"`
+		Schemas     	SchemasObjectEntry  			`json:"schemas"`
 
-		IsFree      bool `json:"free"`
-		IsBindable  bool `json:"bindable"`
+		IsFree      	bool 					`json:"free"`
+		IsBindable  	bool 					`json:"bindable"`
 	}
 
 	type ServiceEntry struct {
-		Id          string `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
+		Id          	string 					`json:"id"`
+		Name        	string 					`json:"name"`
+		Description 	string 					`json:"description"`
 
-		Tags        []string 		`json:"tags"`
-		Metadata    map[string]string 	`json:"metadata"`
+		Tags        	[]string 				`json:"tags"`
+		Metadata    	map[string]string 			`json:"metadata"`
 
-		IsBindable  bool `json:"bindable"`
-		IsUpdatable bool `json:"plan_updateable"`
+		IsBindable  	bool 					`json:"bindable"`
+		IsUpdatable 	bool 					`json:"plan_updateable"`
 
-		Plans []    PlanEntry `json:"plans"`
+		Plans []    	PlanEntry 				`json:"plans"`
 	}
 
 	type Services struct {
-		Services [] ServiceEntry `json:"services"`
+		Services 	[] ServiceEntry 			`json:"services"`
 	}
 
 	var serviceEntries [] ServiceEntry

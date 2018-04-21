@@ -48,13 +48,13 @@ Configure the values.
 | ----------------------- | -------------------------------------- | ------------------------- |
 | `helmi.username`|This is the helmi service broker username.|admin|
 | `helmi.password`|This is the helmi service broker password.|helmi|
-| `helmi.repo_url`|This is the chart repo url.|""|
+| `helmi.repo_url`|This is the chart repo url,default is google repo.|""|
 | `helmi.repo_name`|This is the chart repo name.|""|
-| `ingress.hosts`|The helmi ingress hosts.|""|
-| `kubeconfig.*`|Must set the kubeconfig.|""|
-| `tls.cacert`|Must set the kube ca cert.|""|
+| `ingress.hosts`|The helmi ingress hosts.|"helmi-service-broker.k8s.io"|
+| `kubeconfig.*`|Must set the kubeconfig,support oidc,token.|"xxxxxx"|
+| `tls.cacert`|Must set the kube ca cert.|"xxxxxx"|
 | `service_config.platform`|Must set the register platform.|"kubernetes"|
-| `service_config.services.*`|Support backend services|"mariadb,redis,mongodb,minio,rabbitmq,cassandra"|
+| `service_config.services.*`|Support backend services,contain the service repo and version.|"mariadb,redis,mongodb,minio,rabbitmq,cassandra"|
 
 Install the helmi release.
 
@@ -93,24 +93,24 @@ curl -k 'https://helmi-service-broker.k8s.io/v2/service_instances/3b2e7d2c915242
 ```
 ## Use in Kubernetes example
 
-* If we install it with helm, we can list the service broker on kubernetes
+If we install it with helm, we can list the service broker on kubernetes
 ```
 # kubectl get clusterservicebroker
 NAME                   URL
 helmi-service-broker   http://helmi-service-broker.k8s.io
 ```
 
-* List the service class
+List the service class
 ```
 # kubectl get clusterserviceclasses
 ```
 
-* List the service plans
+List the service plans
 ```
 # kubectl get clusterserviceplans
 ```
 
-* Create service instance with parameters
+Create service instance with parameters
 
 **Note:** the service instance may contain some parameters,and the parameter should be defined in your helm repo chart.
 ```
@@ -119,19 +119,19 @@ helmi-service-broker   http://helmi-service-broker.k8s.io
 # kubectl describe ServiceInstance mariadb-service-instance
 ```
 
-* Bind a service instance
+Bind a service instance
 ```
 # kubectl create -f example/service_bind.yaml
 
 # kubectl describe ServiceBinding springmusic-mariadb-binding 
 ```
 
-* Lunch an app
+Lunch an app
 ```
 #kubectl create -f example/app.yaml
 ```
 
-* View the spring music application
+View the spring music application
 
 ![application-spring-music](docs/app.JPG)
 

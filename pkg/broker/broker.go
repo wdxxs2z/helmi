@@ -17,7 +17,6 @@ const instanceIDLogKey = "instance-id"
 const bindingIDLogKey = "binding-id"
 const detailsLogKey = "details"
 const acceptsIncompleteLogKey = "acceptsIncomplete"
-const releaseNotExist = "release-not-exist"
 
 type UserCredentials map[string]interface{}
 
