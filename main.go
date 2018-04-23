@@ -3,14 +3,10 @@ package main
 import (
 	"os"
 	"log"
-	"fmt"
 	"flag"
 	"strings"
-	"net/http"
 
-	"gopkg.in/yaml.v2"
 	"code.cloudfoundry.org/lager"
-	"github.com/pivotal-cf/brokerapi"
 
 	"github.com/wdxxs2z/helmi/pkg/broker"
 )
@@ -52,45 +48,12 @@ func main() {
 		log.Fatalf("Error loading config file: %s", err)
 	}
 
-	if config.Platform == "kubernetes" {
-		runAsKubernetes(config)
-	} else if config.Platform == "cloudfoundry" {
-		runAsCloudfoundry(config)
-	} else {
-		log.Fatalf("Only support kubernetes and cloudfoundry plarform")
-	}
-}
-
-func runAsKubernetes(config *Config) {
-	a := App{}
+	logger := buildLogger(config.LogLevel)
 
 	os.Setenv("USERNAME", config.Username)
 	os.Setenv("PASSWORD", config.Password)
 
-	out ,err := yaml.Marshal(config.HelmiConfig.Catalog)
-
-	if err != nil {
-		log.Fatalf("Error parse helmi yaml config: %s", err)
-	}
-
-	a.Initialize(out)
-	a.Run(":" + port)
-}
-
-func runAsCloudfoundry(config *Config) {
-
-	logger := buildLogger(config.LogLevel)
-
 	helmibroker := broker.New(config.HelmiConfig, logger)
 
-	credentials := brokerapi.BrokerCredentials{
-		Username: config.Username,
-		Password: config.Password,
-	}
-
-	brokerApi := brokerapi.New(helmibroker, logger, credentials)
-	http.Handle("/", brokerApi)
-
-	fmt.Println("Helm Service Broker started on port " + port + "...")
-	http.ListenAndServe(":"+port, nil)
+	helmibroker.Run(":" + port)
 }

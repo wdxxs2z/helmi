@@ -1,10 +1,16 @@
 package broker
 
 import (
+	"os"
 	"fmt"
+	"log"
+	"strings"
 	"context"
+	"net/http"
 	"encoding/json"
 
+	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
 
@@ -34,6 +40,7 @@ type HelmBroker struct {
 	allowUserBindParameters      	bool
 	catalog 			catalog.Catalog
 	logger                  	lager.Logger
+	brokerRouter			*mux.Router
 }
 
 type CatalogExternal struct {
@@ -41,13 +48,33 @@ type CatalogExternal struct {
 }
 
 func New(config config.Config, logger lager.Logger) *HelmBroker {
-	return &HelmBroker{
+	brokerRouter := mux.NewRouter()
+	broker := &HelmBroker{
 		allowUserProvisionParameters: 	config.AllowUserProvisionParameters,
 		allowUserUpdateParameters:      config.AllowUserUpdateParameters,
 		allowUserBindParameters:        config.AllowUserBindParameters,
 		catalog:			config.Catalog,
 		logger:				logger.Session("helmi-service-broker"),
+		brokerRouter:			brokerRouter,
 	}
+	brokerapi.AttachRoutes(broker.brokerRouter, broker, logger)
+	liveness := broker.brokerRouter.HandleFunc("/liveness", livenessHandler).Methods(http.MethodGet)
+
+	broker.brokerRouter.Use(authHandler(config, map[*mux.Route]bool{liveness: true}))
+	broker.brokerRouter.Use(handlers.ProxyHeaders)
+	broker.brokerRouter.Use(handlers.CompressHandler)
+	broker.brokerRouter.Use(handlers.CORS(
+		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowedMethods([]string{http.MethodHead, http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions}),
+		handlers.AllowCredentials(),
+	))
+
+	return broker
+}
+
+func (b *HelmBroker) Run(address string) {
+	log.Println("Helm Service Broker started on port " + strings.TrimPrefix(address, ":"))
+	log.Fatal(http.ListenAndServe(address, b.brokerRouter))
 }
 
 func (b *HelmBroker) Services(context context.Context) ([]brokerapi.Service, error) {
@@ -203,4 +230,35 @@ func (b *HelmBroker) LastOperation(context context.Context, instanceID, operatio
 	}
 
 	return brokerapi.LastOperation{},nil
+}
+
+func livenessHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
+}
+
+func authHandler(config config.Config, noAuthRequired map[*mux.Route]bool) mux.MiddlewareFunc{
+	validCredentials := func(r *http.Request) bool {
+		if noAuthRequired[mux.CurrentRoute(r)] {
+			return true
+		}
+		user := os.Getenv("USERNAME")
+		pass := os.Getenv("PASSWORD")
+		username, password, ok := r.BasicAuth()
+		if ok && username == user && password == pass {
+			return true
+		}
+		return false
+	}
+
+	return func(handler http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !validCredentials(r) {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			handler.ServeHTTP(w, r)
+		})
+	}
 }

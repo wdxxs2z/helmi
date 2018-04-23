@@ -46,7 +46,6 @@ tls:
   cacert: |
 
 service_config:
-  platform: kubernetes
   loglevel: DEBUG
   allow_user_provision_parameters: true
   allow_user_update_parameters: true

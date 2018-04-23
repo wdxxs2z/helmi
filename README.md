@@ -53,13 +53,9 @@ Configure the values.
 | `ingress.hosts`|The helmi ingress hosts.|"helmi-service-broker.k8s.io"|
 | `kubeconfig.*`|Must set the kubeconfig,support oidc,token.|"xxxxxx"|
 | `tls.cacert`|Must set the kube ca cert.|"xxxxxx"|
-| `service_config.platform`|Must set the register platform.|"kubernetes"|
 | `service_config.services.*`|Support backend services,contain the service repo and version.|"mariadb,redis,mongodb,minio,rabbitmq,cassandra"|
 
 Install the helmi release.
-
-**Note** if you want register the broker to cloudfoundry,please modify the values: platform -> cloudfoundry.If you want register
-this to service-catalog,modify the values: platform -> kubernetes.
 
 ```
 helm install -n helmi-core --namespace helmi-system .

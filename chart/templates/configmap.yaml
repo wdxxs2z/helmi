@@ -25,7 +25,6 @@ data:
     log_level: {{ .Values.service_config.loglevel }}
     username: {{ .Values.helmi.username }}
     password: {{ .Values.helmi.password }}
-    platform: {{ .Values.service_config.platform }}
     helmi_config:
       allow_user_provision_parameters: {{ .Values.service_config.allow_user_provision_parameters }}
       allow_user_update_parameters: {{ .Values.service_config.allow_user_update_parameters }}

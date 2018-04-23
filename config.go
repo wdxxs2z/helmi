@@ -45,9 +45,6 @@ func LoadConfig(configFile string) (config *Config, err error) {
 }
 
 func (c Config) Validate() error {
-	if c.Platform == "" {
-		return errors.New("Must provide a non-empty Platform")
-	}
 
 	if c.LogLevel == "" {
 		return errors.New("Must provide a non-empty LogLevel")
