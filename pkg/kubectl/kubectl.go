@@ -18,7 +18,6 @@ type Node struct {
 }
 
 func createClient() (*kubernetes.Clientset, error){
-	//kubernetes kubeconfig set
 	kubeconfig := os.Getenv("KUBECONFIG")
 	if kubeconfig != "" {
 		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
@@ -27,13 +26,10 @@ func createClient() (*kubernetes.Clientset, error){
 		}
 		return kubernetes.NewForConfig(config)
 	}
-
-	//in kubernetes cluster without kubeconfig
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
 	}
-
 	return kubernetes.NewForConfig(config)
 }
 

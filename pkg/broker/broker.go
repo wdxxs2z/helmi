@@ -17,8 +17,10 @@ import (
 	"github.com/wdxxs2z/helmi/pkg/catalog"
 	"github.com/wdxxs2z/helmi/pkg/release"
 	"github.com/wdxxs2z/helmi/pkg/config"
+	helmi "github.com/wdxxs2z/helmi/pkg/helm"
 )
 
+const fetchServiceCatalog = "catalog"
 const instanceIDLogKey = "instance-id"
 const bindingIDLogKey = "binding-id"
 const detailsLogKey = "details"
@@ -41,13 +43,14 @@ type HelmBroker struct {
 	catalog 			catalog.Catalog
 	logger                  	lager.Logger
 	brokerRouter			*mux.Router
+	helmClient                      *helmi.Client
 }
 
 type CatalogExternal struct {
 	Services []brokerapi.Service `json:"services"`
 }
 
-func New(config config.Config, logger lager.Logger) *HelmBroker {
+func New(config config.Config, client *helmi.Client, logger lager.Logger) *HelmBroker {
 	brokerRouter := mux.NewRouter()
 	broker := &HelmBroker{
 		allowUserProvisionParameters: 	config.AllowUserProvisionParameters,
@@ -56,6 +59,7 @@ func New(config config.Config, logger lager.Logger) *HelmBroker {
 		catalog:			config.Catalog,
 		logger:				logger.Session("helmi-service-broker"),
 		brokerRouter:			brokerRouter,
+		helmClient:                     client,
 	}
 	brokerapi.AttachRoutes(broker.brokerRouter, broker, logger)
 	liveness := broker.brokerRouter.HandleFunc("/liveness", livenessHandler).Methods(http.MethodGet)
@@ -78,6 +82,7 @@ func (b *HelmBroker) Run(address string) {
 }
 
 func (b *HelmBroker) Services(context context.Context) ([]brokerapi.Service, error) {
+	b.logger.Debug(fetchServiceCatalog, lager.Data{})
 	brokerCatalog, err := json.Marshal(b.catalog)
 	if err != nil {
 		b.logger.Error("encode-catalog-err", err)
@@ -102,7 +107,7 @@ func (b *HelmBroker) Provision(context context.Context, instanceID string, detai
 
 	provisionParameters := ProvisionParameters{}
 	if b.allowUserProvisionParameters && len(details.RawParameters) > 0 {
-		if err:= json.Unmarshal(details.RawParameters, & provisionParameters); err!= nil {
+		if err:= json.Unmarshal(details.RawParameters, &provisionParameters); err!= nil {
 			return brokerapi.ProvisionedServiceSpec{}, err
 		}
 	}
@@ -118,7 +123,7 @@ func (b *HelmBroker) Provision(context context.Context, instanceID string, detai
 			return brokerapi.ProvisionedServiceSpec{}, err
 		}
 	}
-	if err := release.Install(&b.catalog, details.ServiceID, servicePlan.Id, instanceID, asyncAllowed, provisionParameters, requestContext); err != nil {
+	if err := release.Install(&b.catalog, details.ServiceID, servicePlan.Id, instanceID, asyncAllowed, provisionParameters, requestContext, b.helmClient); err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
@@ -144,7 +149,7 @@ func (b *HelmBroker) Deprovision(context context.Context, instanceID string, det
 		acceptsIncompleteLogKey: asyncAllowed,
 	})
 
-	if err := release.Delete(instanceID); err != nil {
+	if err := release.Delete(instanceID, b.helmClient); err != nil {
 		return brokerapi.DeprovisionServiceSpec{}, err
 	}
 
@@ -158,26 +163,24 @@ func (b *HelmBroker) Bind(context context.Context, instanceID, bindingID string,
 		detailsLogKey:    details,
 	})
 
-	binding := brokerapi.Binding{}
-
 	servicePlan, err := b.catalog.GetServicePlan(details.ServiceID,details.PlanID)
 	if err != nil {
-		return binding, err
+		return brokerapi.Binding{}, err
 	}
 
 	bindParameters := BindParameters{}
-	if len(details.RawParameters) > 0 {
+	if len(details.RawParameters) > 0 && b.allowUserBindParameters {
 		if err := json.Unmarshal(details.RawParameters, &bindParameters); err != nil {
-			return binding, err
+			return brokerapi.Binding{}, err
 		}
 	}
 
-	credentials, err := release.GetCredentials(&b.catalog, details.ServiceID, servicePlan.Id, instanceID)
+	credentials, err := release.GetCredentials(&b.catalog, details.ServiceID, servicePlan.Id, instanceID, b.helmClient)
 	if err != nil {
-		return binding, err
+		return brokerapi.Binding{}, err
 	}
 
-	binding.Credentials = credentials
+	binding := brokerapi.Binding{Credentials: credentials}
 	return binding, nil
 }
 
@@ -188,7 +191,7 @@ func (b *HelmBroker) Unbind(context context.Context, instanceID, bindingID strin
 		detailsLogKey:    details,
 	})
 
-	exists, err := release.Exists(instanceID)
+	exists, err := release.Exists(instanceID, b.helmClient)
 	if err != nil {
 		return err
 	}
@@ -204,7 +207,7 @@ func (b *HelmBroker) LastOperation(context context.Context, instanceID, operatio
 		instanceIDLogKey: instanceID,
 	})
 
-	status, err := release.GetStatus(instanceID)
+	status, err := release.GetStatus(instanceID, b.helmClient)
 	if err != nil {
 		return brokerapi.LastOperation{
 			State: "failed",

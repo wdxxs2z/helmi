@@ -5,6 +5,12 @@ helmi_config:
   allow_user_provision_parameters: true
   allow_user_update_parameters: true
   allow_user_bind_parameters: true
+  tille_config:
+    host: ""
+    namespace: kube-system
+    repos:
+    - name: stabel
+      url: https://kubernetes-charts.storage.googleapis.com
   catalog:
     services:
     -
@@ -23,7 +29,7 @@ helmi_config:
         providerDisplayName: "Kubernetes Helm Mariadb Service"
         documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/mariadb"
         supportUrl: "https://mariadb.org/"
-      chart: stable/mariadb
+      chart: mariadb
       chart-version: 1.0.7
       chart-values:
         mariadbUser: "{{ lookup('username', 'mariadbUser') }}"

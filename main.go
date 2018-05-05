@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/lager"
 
 	"github.com/wdxxs2z/helmi/pkg/broker"
+	helmi "github.com/wdxxs2z/helmi/pkg/helm"
 )
 
 var (
@@ -53,7 +54,9 @@ func main() {
 	os.Setenv("USERNAME", config.Username)
 	os.Setenv("PASSWORD", config.Password)
 
-	helmibroker := broker.New(config.HelmiConfig, logger)
+	helmClient := helmi.NewClient(config.HelmiConfig, logger)
+
+	helmibroker := broker.New(config.HelmiConfig, helmClient, logger)
 
 	helmibroker.Run(":" + port)
 }

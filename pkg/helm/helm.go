@@ -12,19 +12,6 @@ import (
 	"errors"
 )
 
-type Status struct {
-	Name       string
-	Namespace  string
-	IsFailed   bool
-	IsDeployed bool
-
-	DesiredNodes int
-	AvailableNodes int
-
-	NodePorts map[int] int
-	ClusterPorts map[int] int
-}
-
 func Exists(release string) (bool, error) {
 	cmd := exec.Command("helm", "status", release)
 	output, err := cmd.CombinedOutput()
