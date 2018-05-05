@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"go.uber.org/zap"
 	"github.com/satori/go.uuid"
-	"github.com/wdxxs2z/helmi/pkg/helm"
+	helmi "github.com/wdxxs2z/helmi/pkg/helm"
 	"github.com/wdxxs2z/helmi/pkg/kubectl"
 	"github.com/wdxxs2z/helmi/pkg/catalog"
 	"go.uber.org/zap/zapcore"
@@ -43,7 +43,7 @@ func getLogger() *zap.Logger {
 	return logger
 }
 
-func Install(catalog *catalog.Catalog, serviceId string, planId string, id string, acceptsIncomplete bool, parameters map[string]string, context map[string]string) error {
+func Install(catalog *catalog.Catalog, serviceId string, planId string, id string, acceptsIncomplete bool, parameters map[string]string, context map[string]string, client *helmi.Client) error {
 	name := getName(id)
 	logger := getLogger()
 
@@ -70,7 +70,7 @@ func Install(catalog *catalog.Catalog, serviceId string, planId string, id strin
 		chartVersion = ""
 	}
 
-	err := helm.Install(name, chart, chartVersion, chartValues, chartNamespace, acceptsIncomplete)
+	_, err := client.InstallRelease(name, chart, chartVersion, chartValues, chartNamespace, acceptsIncomplete)
 
 	if err != nil {
 		logger.Error("failed to install release",
@@ -96,11 +96,11 @@ func Install(catalog *catalog.Catalog, serviceId string, planId string, id strin
 	return nil
 }
 
-func Exists(id string) (bool, error) {
+func Exists(id string, client *helmi.Client) (bool, error) {
 	name := getName(id)
 	logger := getLogger()
 
-	exists, err := helm.Exists(name)
+	exists, err := client.ExistRelease(name)
 
 	if err != nil {
 		logger.Error("failed to check if release exists",
@@ -112,14 +112,14 @@ func Exists(id string) (bool, error) {
 	return exists, err
 }
 
-func Delete(id string) error {
+func Delete(id string, client *helmi.Client) error {
 	name := getName(id)
 	logger := getLogger()
 
-	err := helm.Delete(name)
+	err := client.DeleteRelease(name)
 
 	if err != nil {
-		exists, existsErr := helm.Exists(name)
+		exists, existsErr := client.ExistRelease(name)
 
 		if existsErr == nil && !exists {
 			logger.Info("release deleted (not existed)",
@@ -144,14 +144,14 @@ func Delete(id string) error {
 	return nil
 }
 
-func GetStatus(id string) (Status, error) {
+func GetStatus(id string, client *helmi.Client) (Status, error) {
 	name := getName(id)
 	logger := getLogger()
 
-	status, err := helm.GetStatus(name)
+	status, err := client.GetStatus(name)
 
 	if err != nil {
-		exists, existsErr := helm.Exists(name)
+		exists, existsErr := client.ExistRelease(name)
 
 		if existsErr == nil && !exists {
 			logger.Info("asked status for deleted release",
@@ -180,17 +180,17 @@ func GetStatus(id string) (Status, error) {
 	}, nil
 }
 
-func GetCredentials(catalog *catalog.Catalog, serviceId string, planId string, id string) (map[string]interface{}, error) {
+func GetCredentials(catalog *catalog.Catalog, serviceId string, planId string, id string, client *helmi.Client) (map[string]interface{}, error) {
 	name := getName(id)
 	logger := getLogger()
 
 	service, _ := catalog.GetService(serviceId)
 	plan, _ := catalog.GetServicePlan(serviceId, planId)
 
-	status, err := helm.GetStatus(name)
+	status, err := client.GetStatus(name)
 
 	if err != nil {
-		exists, existsErr := helm.Exists(name)
+		exists, existsErr := client.ExistRelease(name)
 
 		if existsErr == nil && !exists {
 			logger.Info("asked credentials for deleted release",
@@ -219,7 +219,7 @@ func GetCredentials(catalog *catalog.Catalog, serviceId string, planId string, i
 		return nil, err
 	}
 
-	values, err := helm.GetValues(name)
+	values, err := client.GetReleaseValues(name)
 
 	if err != nil {
 		logger.Error("failed to get helm values",
@@ -371,7 +371,7 @@ func getChartValues(service catalog.CatalogService, plan catalog.CatalogPlan, pa
 	return values
 }
 
-func getUserCredentials(service catalog.CatalogService, plan catalog.CatalogPlan, kubernetesNodes [] kubectl.Node, helmStatus helm.Status, helmValues map[string]string) map[string]interface{} {
+func getUserCredentials(service catalog.CatalogService, plan catalog.CatalogPlan, kubernetesNodes [] kubectl.Node, helmStatus helmi.Status, helmValues map[string]string) map[string]interface{} {
 	values := map[string]interface{}{}
 	templates := map[string]interface{}{}
 

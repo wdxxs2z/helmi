@@ -80,9 +80,13 @@ func Create(client *gophercloud.ServiceClient, opts CreateOpts) (r CreateResult)
 		r.Err = err
 		return
 	}
-	_, r.Err = client.Post(policyCreateURL(client), b, &r.Body, &gophercloud.RequestOpts{
+	var result *http.Response
+	result, r.Err = client.Post(policyCreateURL(client), b, &r.Body, &gophercloud.RequestOpts{
 		OkCodes: []int{201},
 	})
+	if r.Err == nil {
+		r.Header = result.Header
+	}
 	return
 }
 
@@ -93,5 +97,33 @@ func Delete(client *gophercloud.ServiceClient, policyID string) (r DeleteResult)
 		OkCodes: []int{204},
 	})
 	r.Header = result.Header
+	return
+}
+
+// ValidateOpts params
+type ValidateOpts struct {
+	Spec Spec `json:"spec"`
+}
+
+// ToValidatePolicyMap formats a CreateOpts into a body map.
+func (opts ValidateOpts) ToValidatePolicyMap() (map[string]interface{}, error) {
+	return gophercloud.BuildRequestBody(opts, "policy")
+}
+
+// Validate policy.
+func Validate(client *gophercloud.ServiceClient, opts ValidateOpts) (r ValidateResult) {
+	b, err := opts.ToValidatePolicyMap()
+	if err != nil {
+		r.Err = err
+		return
+	}
+
+	var result *http.Response
+	result, r.Err = client.Post(validateURL(client), b, &r.Body, &gophercloud.RequestOpts{
+		OkCodes: []int{200, 201},
+	})
+	if r.Err == nil {
+		r.Header = result.Header
+	}
 	return
 }
