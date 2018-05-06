@@ -19,6 +19,7 @@ import (
 	"k8s.io/helm/pkg/chartutil"
 	"github.com/kylelemons/go-gypsy/yaml"
 	"bytes"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 type Client struct {
@@ -45,12 +46,17 @@ func NewClient (config config.Config, logger lager.Logger) *Client {
 		fmt.Errorf("create helm client error: %s", err)
 		return nil
 	}
+	logger.Debug("create-helm-client-success", lager.Data{"client": helmClient})
 	return &Client{
 		helm:		helmClient,
 		env:		helmEnv,
 		logger:		logger.Session("helm-client"),
 		config:		config,
 	}
+}
+
+func (c *Client) TillerCheck() error {
+	return c.helm.PingTiller()
 }
 
 func (c *Client) ExistRelease(release string) (bool, error) {

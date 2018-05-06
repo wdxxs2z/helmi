@@ -11,6 +11,8 @@ helmi_config:
     repos:
     - name: stable
       url: https://kubernetes-charts.storage.googleapis.com
+    - name: monostream
+      url: http://monostream-helm.s3-eu-west-1.amazonaws.com/charts
   catalog:
     services:
     -

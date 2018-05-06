@@ -30,11 +30,10 @@ data:
       allow_user_update_parameters: {{ .Values.service_config.allow_user_update_parameters }}
       allow_user_bind_parameters: {{ .Values.service_config.allow_user_bind_parameters }}
       tille_config:
-        host: ""
-        namespace: kube-system
+        host: {{ .Values.helmi.tillerhost }}
+        namespace: {{ .Values.helmi.namespace }}
         repos:
-        - name: stable
-          url: https://kubernetes-charts.storage.googleapis.com
+{{ toYaml .Values.helmi.repos | indent 8 }}
       catalog:
         services:
         -

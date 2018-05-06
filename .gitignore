@@ -16,3 +16,8 @@
 # IDEs
 .idea/
 .vscode/
+
+repository/
+starters/
+plugins/
+cache/
