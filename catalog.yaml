@@ -9,7 +9,7 @@ helmi_config:
     host: ""
     namespace: kube-system
     repos:
-    - name: stabel
+    - name: stable
       url: https://kubernetes-charts.storage.googleapis.com
   catalog:
     services:
@@ -29,7 +29,7 @@ helmi_config:
         providerDisplayName: "Kubernetes Helm Mariadb Service"
         documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/mariadb"
         supportUrl: "https://mariadb.org/"
-      chart: mariadb
+      chart: stable/mariadb
       chart-version: 1.0.7
       chart-values:
         mariadbUser: "{{ lookup('username', 'mariadbUser') }}"

@@ -59,8 +59,7 @@ func (c *Client) ExistRelease(release string) (bool, error) {
 	})
 	statusRes, err := c.helm.ReleaseStatus(release)
 	if err != nil {
-		fmt.Errorf("check release error: %s", err)
-		return false, err
+		return false, fmt.Errorf("check release cause an error: %s", err)
 	}
 	if statusRes == nil {
 		return false, nil
@@ -84,18 +83,21 @@ func (c *Client) InstallRelease(release string, chartName string, version string
 
 	rawValues, err := utils.ConvertInterfaceToByte(values)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("convert values to yaml values cause an error: %s", err)
 	}
 
 	chart, err := getChart(c.config, c.env, chartName, version, c.logger)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("install release %s, cause an error: %s", chartName, err)
 	}
 
 	res, err := c.helm.InstallReleaseFromChart(chart, namespace, installOpts(release, wait, rawValues)...)
 	if res == nil || res.Release == nil {
-		rls , _ := c.getRelease(release)
+		rls ,err := c.getRelease(release)
+		if err != nil {
+			return nil, fmt.Errorf("get the release cause an error: %s", err)
+		}
 		if rls != nil {
 			return rls, nil
 		}
@@ -108,7 +110,7 @@ func (c *Client) InstallRelease(release string, chartName string, version string
 func (c *Client) DeleteRelease(release string) error {
 	_, err := c.helm.DeleteRelease(release, deleteOpts()...)
 	if err != nil {
-		return err
+		return fmt.Errorf("delete release cause an error: %s", err)
 	}
 	return nil
 }
@@ -201,22 +203,22 @@ func getHelmClient(config config.Config) (*helm.Client, error){
 	}else {
 		kubeconfig, err := getKubeConfig()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("get kube config cause an error: %s", err)
 		}
 		client, err := getKubeClient()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("get kube client cause an error: %s", err)
 		}
 		var tunnel *kube.Tunnel
 		if config.TillerConfig.Namespace != "" {
 			tunnel, err = portforwarder.New(config.TillerConfig.Namespace, client, kubeconfig)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("open tunnel cause an error: %s", err)
 			}
 		}else {
 			tunnel, err = portforwarder.New("kube-system", client, kubeconfig)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("open tunnel cause an error: %s", err)
 			}
 		}
 		tillerHost := fmt.Sprintf("127.0.0.1:%d", tunnel.Local)

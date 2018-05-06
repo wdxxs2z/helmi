@@ -2,15 +2,14 @@ package helm
 
 import (
 	"os"
-	"errors"
 
 	"k8s.io/helm/pkg/repo"
 	"k8s.io/helm/pkg/getter"
 	"code.cloudfoundry.org/lager"
 	"k8s.io/helm/pkg/helm/helmpath"
-	log "github.com/Sirupsen/logrus"
 	"k8s.io/helm/pkg/helm/environment"
 	"github.com/wdxxs2z/helmi/pkg/config"
+	"fmt"
 )
 
 type Repository struct {
@@ -24,13 +23,12 @@ func initRepos(env environment.EnvSettings, logger lager.Logger, config config.C
 	})
 	repositorys := config.TillerConfig.Repos
 	if repositorys == nil {
-		log.Debug("repository is null.")
-		return errors.New("helm repository must not null")
+		return fmt.Errorf("helm repository must not null, please config the tillerconfig repos.")
 	}
 	for _, repository := range repositorys {
 		err := addrepo(repository.Name, repository.Url, env, logger)
 		if err != nil {
-			return err
+			return fmt.Errorf("error add %s repo to local cache, the error is: %s", repository, err)
 		}
 	}
 	return nil
@@ -47,8 +45,7 @@ func addrepo(name, url string, env environment.EnvSettings, logger lager.Logger)
 	})
 	repo, err := repo.NewChartRepository(&entry, getter.All(env))
 	if err != nil {
-		log.Errorf("adding repository error: %s", err)
-		return err
+		return fmt.Errorf("create chart repo cause an error: %s", err)
 	}
 	return handingRepos(repo, entry, env, logger)
 }
@@ -59,15 +56,13 @@ func handingRepos(r *repo.ChartRepository, e repo.Entry, env environment.EnvSett
 	})
 	err := r.DownloadIndexFile("")
 	if err != nil {
-		log.Errorf("downloading repository error: %s", err)
-		return err
+		return fmt.Errorf("download repo index file cause an error: %s", err)
 	}
 	_, err = os.Stat(env.Home.RepositoryFile())
 	if err != nil {
 		err = addRepoFile(env.Home.RepositoryFile(), e)
 		if err != nil{
-			log.Debugf("add repository file error: %s", err)
-			return err
+			return fmt.Errorf("add repo file to local cause an error: %s", err)
 		}
 	}
 	return updateRepoFile(env.Home.RepositoryFile(), e)
@@ -76,15 +71,13 @@ func handingRepos(r *repo.ChartRepository, e repo.Entry, env environment.EnvSett
 func addRepoFile(file string, e repo.Entry) error {
 	f := repo.NewRepoFile()
 	f.Add(&e)
-	log.Debugf("Writing repository file %s", file)
 	return f.WriteFile(file, 0644)
 }
 
 func updateRepoFile(file string, e repo.Entry) error {
 	f, err := repo.LoadRepositoriesFile(file)
 	if err != nil {
-		log.Errorf("updating the repo file err: %s", err)
-		return err
+		return fmt.Errorf("update repo file and load the repo file cause an error: %s", err)
 	}
 	f.Update(&e)
 	return f.WriteFile(file, 0644)
@@ -101,8 +94,7 @@ func handingHelmDirectors(home helmpath.Home) error{
 	for _, dir := range helmDirectories {
 		err := handingDirectory(dir)
 		if err != nil {
-			log.Errorf("handing the %s director error: %s", dir, err)
-			return err
+			return fmt.Errorf("handing helm directors cause an error: %s", err)
 		}
 	}
 	return nil
@@ -113,7 +105,7 @@ func handingDirectory(dir string) error {
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0744)
 		if err != nil {
-			return err
+			return fmt.Errorf("handing director %s cause an error: %s", dir, err)
 		}
 	}
 	return nil
