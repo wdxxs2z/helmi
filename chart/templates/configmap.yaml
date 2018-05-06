@@ -29,6 +29,12 @@ data:
       allow_user_provision_parameters: {{ .Values.service_config.allow_user_provision_parameters }}
       allow_user_update_parameters: {{ .Values.service_config.allow_user_update_parameters }}
       allow_user_bind_parameters: {{ .Values.service_config.allow_user_bind_parameters }}
+      tille_config:
+        host: ""
+        namespace: kube-system
+        repos:
+        - name: stable
+          url: https://kubernetes-charts.storage.googleapis.com
       catalog:
         services:
         -
