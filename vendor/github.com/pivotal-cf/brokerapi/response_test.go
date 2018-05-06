@@ -1,10 +1,10 @@
 package brokerapi_test
 
 import (
+	"encoding/json"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/pivotal-cf/brokerapi/matchers"
-
 	"github.com/pivotal-cf/brokerapi"
 )
 
@@ -14,9 +14,9 @@ var _ = Describe("Catalog Response", func() {
 			catalogResponse := brokerapi.CatalogResponse{
 				Services: []brokerapi.Service{},
 			}
-			json := `{"services":[]}`
+			jsonString := `{"services":[]}`
 
-			Expect(catalogResponse).To(MarshalToJSON(json))
+			Expect(json.Marshal(catalogResponse)).To(MatchJSON(jsonString))
 		})
 	})
 })
@@ -26,9 +26,9 @@ var _ = Describe("Provisioning Response", func() {
 		Context("when the dashboard URL is not present", func() {
 			It("does not return it in the JSON", func() {
 				provisioningResponse := brokerapi.ProvisioningResponse{}
-				json := `{}`
+				jsonString := `{}`
 
-				Expect(provisioningResponse).To(MarshalToJSON(json))
+				Expect(json.Marshal(provisioningResponse)).To(MatchJSON(jsonString))
 			})
 		})
 
@@ -37,9 +37,9 @@ var _ = Describe("Provisioning Response", func() {
 				provisioningResponse := brokerapi.ProvisioningResponse{
 					DashboardURL: "http://example.com/broker",
 				}
-				json := `{"dashboard_url":"http://example.com/broker"}`
+				jsonString := `{"dashboard_url":"http://example.com/broker"}`
 
-				Expect(provisioningResponse).To(MarshalToJSON(json))
+				Expect(json.Marshal(provisioningResponse)).To(MatchJSON(jsonString))
 			})
 		})
 	})
@@ -48,10 +48,10 @@ var _ = Describe("Provisioning Response", func() {
 var _ = Describe("Binding Response", func() {
 	Describe("JSON encoding", func() {
 		It("has a credentials object", func() {
-			bindingResponse := brokerapi.BindingResponse{}
-			json := `{"credentials":null}`
+			binding := brokerapi.Binding{}
+			jsonString := `{"credentials":null}`
 
-			Expect(bindingResponse).To(MarshalToJSON(json))
+			Expect(json.Marshal(binding)).To(MatchJSON(jsonString))
 		})
 	})
 })
@@ -62,9 +62,9 @@ var _ = Describe("Error Response", func() {
 			errorResponse := brokerapi.ErrorResponse{
 				Description: "a bad thing happened",
 			}
-			json := `{"description":"a bad thing happened"}`
+			jsonString := `{"description":"a bad thing happened"}`
 
-			Expect(errorResponse).To(MarshalToJSON(json))
+			Expect(json.Marshal(errorResponse)).To(MatchJSON(jsonString))
 		})
 	})
 })

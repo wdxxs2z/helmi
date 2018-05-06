@@ -409,13 +409,10 @@
   version = "v2.0.1"
 
 [[projects]]
-  branch = "arbitrary_params"
   name = "github.com/pivotal-cf/brokerapi"
-  packages = [
-    ".",
-    "auth"
-  ]
-  revision = "3c6889259b98dc489f552cd5a0ebeec117620219"
+  packages = ["."]
+  revision = "b763fb58cdae010fb90a94387db218c95967f0d5"
+  version = "v2.0.0"
 
 [[projects]]
   branch = "fix-large-token"

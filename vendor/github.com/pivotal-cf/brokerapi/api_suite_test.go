@@ -6,10 +6,9 @@ import (
 	"path"
 	"testing"
 
-	"code.google.com/p/go-uuid/uuid"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pborman/uuid"
 )
 
 func TestAPI(t *testing.T) {
