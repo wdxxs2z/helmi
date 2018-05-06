@@ -91,7 +91,7 @@
   branch = "master"
   name = "github.com/docker/distribution"
   packages = [
-    "digest",
+    "digestset",
     "reference"
   ]
   revision = "83389a148052d74ac602f5f1d62f86ff2f3c4aa5"
@@ -385,6 +385,12 @@
   version = "18.17.4"
 
 [[projects]]
+  name = "github.com/opencontainers/go-digest"
+  packages = ["."]
+  revision = "279bed98673dd5bef374d3b6e4b09e2af76183bf"
+  version = "v1.0.0-rc1"
+
+[[projects]]
   name = "github.com/pborman/uuid"
   packages = ["."]
   revision = "e790cca94e6cc75c7064b1332e63811d4aae1a53"
@@ -403,10 +409,13 @@
   version = "v2.0.1"
 
 [[projects]]
+  branch = "arbitrary_params"
   name = "github.com/pivotal-cf/brokerapi"
-  packages = ["."]
-  revision = "bc29a3e7d6f911097c2c4998fc7cc7a408cc4268"
-  version = "v2.0.1"
+  packages = [
+    ".",
+    "auth"
+  ]
+  revision = "3c6889259b98dc489f552cd5a0ebeec117620219"
 
 [[projects]]
   branch = "fix-large-token"
@@ -460,12 +469,6 @@
   version = "v1.2.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/shurcooL/sanitized_anchor_name"
-  packages = ["."]
-  revision = "86672fcb3f950f35f2e675df2240550f2a50762f"
-
-[[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
   revision = "a1f051bc3eba734da4772d60e2d677f47cf93ef4"
@@ -506,8 +509,16 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
+    "cast5",
     "ed25519",
     "ed25519/internal/edwards25519",
+    "openpgp",
+    "openpgp/armor",
+    "openpgp/clearsign",
+    "openpgp/elgamal",
+    "openpgp/errors",
+    "openpgp/packet",
+    "openpgp/s2k",
     "ssh/terminal"
   ]
   revision = "8b1d31080a7692e075c4681cb2458454a1fe0706"
@@ -929,15 +940,27 @@
   name = "k8s.io/helm"
   packages = [
     "pkg/chartutil",
+    "pkg/downloader",
+    "pkg/getter",
     "pkg/helm",
+    "pkg/helm/environment",
+    "pkg/helm/helmpath",
     "pkg/helm/portforwarder",
     "pkg/ignore",
     "pkg/kube",
+    "pkg/plugin",
     "pkg/proto/hapi/chart",
     "pkg/proto/hapi/release",
     "pkg/proto/hapi/services",
     "pkg/proto/hapi/version",
+    "pkg/provenance",
+    "pkg/repo",
+    "pkg/resolver",
+    "pkg/strvals",
     "pkg/sympath",
+    "pkg/timeconv",
+    "pkg/tlsutil",
+    "pkg/urlutil",
     "pkg/version"
   ]
   revision = "f6025bb9ee7daf9fee0026541c90a6f557a3e0bc"
@@ -1136,6 +1159,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8a94a3e026011444d3d51f0cc82b2f48c0243fd077fe8915d15b3c959204a1ef"
+  inputs-digest = "85e8cc84cd62bdcf36a5aea7a64ed9365d14cb779eaaab24a004bf7f401e77ed"
   solver-name = "gps-cdcl"
   solver-version = 1
