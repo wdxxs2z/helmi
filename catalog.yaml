@@ -6,12 +6,12 @@ helmi_config:
   allow_user_update_parameters: true
   allow_user_bind_parameters: true
   tille_config:
-    host:
+    host: ""
     namespace: kube-system
-    connection_timeout: 300
+    home: .helm
     repos:
     - name: stable
-      url: https://kubernetes-charts.storage.googleapis.com
+      url: https://kubernetes.oss-cn-hangzhou.aliyuncs.com/charts
     - name: monostream
       url: http://monostream-helm.s3-eu-west-1.amazonaws.com/charts
   catalog:

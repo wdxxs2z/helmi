@@ -54,18 +54,19 @@ func handingRepos(r *repo.ChartRepository, e repo.Entry, env environment.EnvSett
 	logger.Debug("handing-repos", lager.Data{
 		"repofile": env.Home.RepositoryFile(),
 	})
-	err := r.DownloadIndexFile("")
-	if err != nil {
-		return fmt.Errorf("download repo index file cause an error: %s", err)
+
+	downloadErr := r.DownloadIndexFile("")
+	if downloadErr != nil {
+		return fmt.Errorf("download repo index file cause an error: %s", downloadErr)
 	}
-	_, err = os.Stat(env.Home.RepositoryFile())
+	_, err := os.Stat(env.Home.RepositoryFile())
 	if err != nil {
-		err = addRepoFile(env.Home.RepositoryFile(), e)
-		if err != nil{
+		adderr := addRepoFile(env.Home.RepositoryFile(), e)
+		if adderr != nil{
 			return fmt.Errorf("add repo file to local cause an error: %s", err)
 		}
 	}
-	return updateRepoFile(env.Home.RepositoryFile(), e)
+	return updateRepoFile(env.Home.RepositoryFile(), e, logger)
 }
 
 func addRepoFile(file string, e repo.Entry) error {
@@ -74,7 +75,10 @@ func addRepoFile(file string, e repo.Entry) error {
 	return f.WriteFile(file, 0644)
 }
 
-func updateRepoFile(file string, e repo.Entry) error {
+func updateRepoFile(file string, e repo.Entry, logger lager.Logger) error {
+	logger.Debug("update-repo-file", lager.Data{
+		"file": file,
+	})
 	f, err := repo.LoadRepositoriesFile(file)
 	if err != nil {
 		return fmt.Errorf("update repo file and load the repo file cause an error: %s", err)

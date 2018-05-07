@@ -15,7 +15,7 @@ type Config struct {
 type TillerSet struct {
 	Host			string			`yaml:"host"`
 	Namespace		string          	`yaml:"namespace"`
-	ConnectionTimeout 	int64			`yaml:"connection_timeout"`
+	Home			string			`yaml:"home"`
 	Repos           	[]Repository		`yaml:"repos"`
 }
 

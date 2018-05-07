@@ -10,6 +10,7 @@ import (
 
 	"github.com/wdxxs2z/helmi/pkg/broker"
 	helmi "github.com/wdxxs2z/helmi/pkg/helm"
+	"fmt"
 )
 
 var (
@@ -57,8 +58,8 @@ func main() {
 	helmClient := helmi.NewClient(config.HelmiConfig, logger)
 
 	if helmClient == nil {
-		log.Fatalf("please check your internet and cache the repo index, or the kubernetes tiller server is ok.")
-		//return
+		fmt.Println("please check your internet and cache the repo index, or the kubernetes tiller server is ok.")
+		return
 	}
 
 	helmibroker := broker.New(config.HelmiConfig, helmClient, logger)
