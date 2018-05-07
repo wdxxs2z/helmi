@@ -31,26 +31,25 @@ type Client struct {
 }
 
 func NewClient (config config.Config, logger lager.Logger) *Client {
-	logger.Debug("debug-process-helm-env", lager.Data{})
 	helmEnv := getHelmEnvironment(config)
 	err := handingHelmDirectors(helmEnv.Home)
 	if err != nil {
 		fmt.Errorf("handing the helm director error: %s", err)
 		return nil
 	}
-	logger.Debug("debug-init-helm-repo", lager.Data{})
+	logger.Debug("debug-start-init-helm-repo", lager.Data{"helm-env": helmEnv})
 	err = initRepos(helmEnv, logger, config)
 	if err != nil {
 		fmt.Errorf("init helm repository error: %s", err)
 		return nil
 	}
-	logger.Debug("debug-get-helm-client", lager.Data{})
+	logger.Debug("debug-start-create-helm-client", lager.Data{})
 	helmClient, err := getHelmClient(config)
 	if err != nil {
 		fmt.Errorf("create helm client error: %s", err)
 		return nil
 	}
-	logger.Debug("create-helm-client-success", lager.Data{"client": helmClient})
+	logger.Debug("debug-create-helm-client-success", lager.Data{"client": helmClient})
 	return &Client{
 		helm:		helmClient,
 		env:		helmEnv,
@@ -184,6 +183,7 @@ func getHelmEnvironment(config config.Config) environment.EnvSettings {
 	var envs environment.EnvSettings
 	envs.TillerHost = config.TillerConfig.Host
 	envs.TillerNamespace = config.TillerConfig.Namespace
+	envs.TillerConnectionTimeout = config.TillerConfig.ConnectionTimeout
 	if config.TillerConfig.Home != "" {
 		envs.Home = helmpath.Home(config.TillerConfig.Home)
 	}

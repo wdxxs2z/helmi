@@ -9,6 +9,7 @@ helmi_config:
     host: ""
     namespace: kube-system
     home: .helm
+    connection_timeout: 60
     repos:
     - name: stable
       url: https://kubernetes.oss-cn-hangzhou.aliyuncs.com/charts
