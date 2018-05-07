@@ -13,6 +13,8 @@ helmi:
   password: helmi
   namespace: kube-system
   tillerhost: ""
+  home: ".helm"
+  connection_timeout: 60
   repos:
   - name: stable
     url: https://kubernetes-charts.storage.googleapis.com

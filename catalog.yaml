@@ -6,7 +6,7 @@ helmi_config:
   allow_user_update_parameters: true
   allow_user_bind_parameters: true
   tille_config:
-    host: ""
+    host:
     namespace: kube-system
     home: .helm
     connection_timeout: 60

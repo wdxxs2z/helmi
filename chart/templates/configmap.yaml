@@ -32,6 +32,8 @@ data:
       tille_config:
         host: {{ .Values.helmi.tillerhost }}
         namespace: {{ .Values.helmi.namespace }}
+        home: {{ .Values.helmi.home }}
+        connection_timeout: {{ .Values.helmi.connection_timeout }}
         repos:
 {{ toYaml .Values.helmi.repos | indent 8 }}
       catalog:
