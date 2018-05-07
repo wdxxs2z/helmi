@@ -58,7 +58,7 @@ func main() {
 
 	if helmClient == nil {
 		log.Fatalf("please check your internet and cache the repo index, or the kubernetes tiller server is ok.")
-		return
+		//return
 	}
 
 	helmibroker := broker.New(config.HelmiConfig, helmClient, logger)
