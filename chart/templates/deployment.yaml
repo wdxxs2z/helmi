@@ -51,11 +51,6 @@ spec:
             port: 5000
           initialDelaySeconds: 30
           periodSeconds: 60
-        readinessProbe:
-          exec:
-            command: [ "/bin/sh", "-c", "kubeversion" ]
-          initialDelaySeconds: 30
-          periodSeconds: 60
       volumes:
       - name: helmi-catalog
         configMap:
