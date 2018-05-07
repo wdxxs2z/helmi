@@ -13,9 +13,10 @@ type Config struct {
 }
 
 type TillerSet struct {
-	Host		string			`yaml:"host"`
-	Namespace	string          	`yaml:"namespace"`
-	Repos           []Repository		`yaml:"repos"`
+	Host			string			`yaml:"host"`
+	Namespace		string          	`yaml:"namespace"`
+	ConnectionTimeout 	int64			`yaml:"connection_timeout"`
+	Repos           	[]Repository		`yaml:"repos"`
 }
 
 type Repository struct {

@@ -8,6 +8,7 @@ helmi_config:
   tille_config:
     host: ""
     namespace: kube-system
+    connection_timeout: 300
     repos:
     - name: stable
       url: https://kubernetes-charts.storage.googleapis.com

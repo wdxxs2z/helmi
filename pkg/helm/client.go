@@ -180,6 +180,7 @@ func getHelmEnvironment(config config.Config) environment.EnvSettings {
 	var envs environment.EnvSettings
 	envs.TillerHost = config.TillerConfig.Host
 	envs.TillerNamespace = config.TillerConfig.Namespace
+	envs.TillerConnectionTimeout = config.TillerConfig.ConnectionTimeout
 	return envs
 }
 
