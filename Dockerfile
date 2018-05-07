@@ -8,15 +8,14 @@ WORKDIR /go/src/github.com/wdxxs2z/helmi/
 
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o helmi .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o kubeversion ./kubecmd
 
 # Copy helm artefacts
 WORKDIR /app/
 RUN cp /go/src/github.com/wdxxs2z/helmi/helmi .
+RUN cp /go/src/github.com/wdxxs2z/helmi/kubeversion .
 RUN cp /go/src/github.com/wdxxs2z/helmi/catalog.yaml .
 RUN rm -r /go/src/
-
-# Download kubectl 1.7.12
-RUN wget -nv https://storage.googleapis.com/kubernetes-release/release/v1.7.12/bin/linux/amd64/kubectl && chmod 755 kubectl
 
 # Download dumb-init 1.2.1
 RUN wget -nv -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.1/dumb-init_1.2.1_amd64 && chmod 755 /usr/local/bin/dumb-init

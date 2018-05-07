@@ -53,7 +53,7 @@ spec:
           periodSeconds: 60
         readinessProbe:
           exec:
-            command: [ "/bin/sh", "-c", "kubectl version" ]
+            command: [ "/bin/sh", "-c", "kubeversion" ]
           initialDelaySeconds: 30
           periodSeconds: 60
       volumes:

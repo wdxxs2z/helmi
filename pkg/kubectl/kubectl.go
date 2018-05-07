@@ -6,6 +6,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
+	"k8s.io/apimachinery/pkg/version"
 	"os"
 )
 
@@ -31,6 +32,18 @@ func createClient() (*kubernetes.Clientset, error){
 		return nil, err
 	}
 	return kubernetes.NewForConfig(config)
+}
+
+func CheckVersion() (*version.Info, error){
+	clientset, err := createClient()
+	if err != nil {
+		return nil, err
+	}
+	info, err := clientset.ServerVersion()
+	if err != nil {
+		return nil, err
+	}
+	return info, nil
 }
 
 func GetNodes() ([] Node, error) {
