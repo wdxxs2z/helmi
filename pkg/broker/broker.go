@@ -18,13 +18,9 @@ import (
 	"github.com/wdxxs2z/helmi/pkg/release"
 	"github.com/wdxxs2z/helmi/pkg/config"
 	helmi "github.com/wdxxs2z/helmi/pkg/helm"
+	helmicons "github.com/wdxxs2z/helmi/pkg/constants"
+	"errors"
 )
-
-const fetchServiceCatalog = "catalog"
-const instanceIDLogKey = "instance-id"
-const bindingIDLogKey = "binding-id"
-const detailsLogKey = "details"
-const acceptsIncompleteLogKey = "acceptsIncomplete"
 
 type UserCredentials map[string]interface{}
 
@@ -57,7 +53,7 @@ func New(config config.Config, client *helmi.Client, logger lager.Logger) *HelmB
 		allowUserUpdateParameters:      config.AllowUserUpdateParameters,
 		allowUserBindParameters:        config.AllowUserBindParameters,
 		catalog:			config.Catalog,
-		logger:				logger.Session("helmi-service-broker"),
+		logger:				logger.Session("service-broker"),
 		brokerRouter:			brokerRouter,
 		helmClient:                     client,
 	}
@@ -77,12 +73,16 @@ func New(config config.Config, client *helmi.Client, logger lager.Logger) *HelmB
 }
 
 func (b *HelmBroker) Run(address string) {
+	if b.helmClient == nil {
+		b.logger.Error("run-service-broker-error", errors.New("helm client must not null"), lager.Data{"advance": "check your kubeconfig, or catalog.yaml"})
+		return
+	}
 	log.Println("Helm Service Broker started on port " + strings.TrimPrefix(address, ":"))
 	log.Fatal(http.ListenAndServe(address, b.brokerRouter))
 }
 
 func (b *HelmBroker) Services(context context.Context) ([]brokerapi.Service, error) {
-	b.logger.Debug(fetchServiceCatalog, lager.Data{})
+	b.logger.Debug(helmicons.FetchServiceCatalog, lager.Data{})
 	brokerCatalog, err := json.Marshal(b.catalog)
 	if err != nil {
 		b.logger.Error("encode-catalog-err", err)
@@ -100,9 +100,9 @@ func (b *HelmBroker) Services(context context.Context) ([]brokerapi.Service, err
 
 func (b *HelmBroker) Provision(context context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (brokerapi.ProvisionedServiceSpec, error){
 	b.logger.Debug("provision", lager.Data{
-		instanceIDLogKey:        	instanceID,
-		detailsLogKey:           	details,
-		acceptsIncompleteLogKey: 	asyncAllowed,
+		helmicons.InstanceIDLogKey:        	instanceID,
+		helmicons.DetailsLogKey:           	details,
+		helmicons.AcceptsIncompleteLogKey: 	asyncAllowed,
 	})
 
 	provisionParameters := ProvisionParameters{}
@@ -123,7 +123,7 @@ func (b *HelmBroker) Provision(context context.Context, instanceID string, detai
 			return brokerapi.ProvisionedServiceSpec{}, err
 		}
 	}
-	if err := release.Install(&b.catalog, details.ServiceID, servicePlan.Id, instanceID, asyncAllowed, provisionParameters, requestContext, b.helmClient); err != nil {
+	if err := release.Install(&b.catalog, details.ServiceID, servicePlan.Id, instanceID, asyncAllowed, provisionParameters, requestContext, b.helmClient, b.logger); err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
@@ -132,9 +132,9 @@ func (b *HelmBroker) Provision(context context.Context, instanceID string, detai
 
 func (b *HelmBroker) Update(context context.Context, instanceID string, details brokerapi.UpdateDetails, asyncAllowed bool) (brokerapi.UpdateServiceSpec, error) {
 	b.logger.Debug("update", lager.Data{
-		instanceIDLogKey:        instanceID,
-		detailsLogKey:           details,
-		acceptsIncompleteLogKey: asyncAllowed,
+		helmicons.InstanceIDLogKey:        	instanceID,
+		helmicons.DetailsLogKey:           	details,
+		helmicons.AcceptsIncompleteLogKey: 	asyncAllowed,
 	})
 
 	// TODO
@@ -144,12 +144,12 @@ func (b *HelmBroker) Update(context context.Context, instanceID string, details 
 
 func (b *HelmBroker) Deprovision(context context.Context, instanceID string, details brokerapi.DeprovisionDetails, asyncAllowed bool) (brokerapi.DeprovisionServiceSpec, error) {
 	b.logger.Debug("deprovision", lager.Data{
-		instanceIDLogKey:        instanceID,
-		detailsLogKey:           details,
-		acceptsIncompleteLogKey: asyncAllowed,
+		helmicons.InstanceIDLogKey:        	instanceID,
+		helmicons.DetailsLogKey:           	details,
+		helmicons.AcceptsIncompleteLogKey: 	asyncAllowed,
 	})
 
-	if err := release.Delete(instanceID, b.helmClient); err != nil {
+	if err := release.Delete(instanceID, b.helmClient, b.logger); err != nil {
 		return brokerapi.DeprovisionServiceSpec{}, err
 	}
 
@@ -158,9 +158,9 @@ func (b *HelmBroker) Deprovision(context context.Context, instanceID string, det
 
 func (b *HelmBroker) Bind(context context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error){
 	b.logger.Debug("bind", lager.Data{
-		instanceIDLogKey: instanceID,
-		bindingIDLogKey:  bindingID,
-		detailsLogKey:    details,
+		helmicons.InstanceIDLogKey: 		instanceID,
+		helmicons.BindingIDLogKey:  	 	bindingID,
+		helmicons.DetailsLogKey:       	details,
 	})
 
 	servicePlan, err := b.catalog.GetServicePlan(details.ServiceID,details.PlanID)
@@ -175,7 +175,7 @@ func (b *HelmBroker) Bind(context context.Context, instanceID, bindingID string,
 		}
 	}
 
-	credentials, err := release.GetCredentials(&b.catalog, details.ServiceID, servicePlan.Id, instanceID, b.helmClient)
+	credentials, err := release.GetCredentials(&b.catalog, details.ServiceID, servicePlan.Id, instanceID, b.helmClient, b.logger)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
@@ -186,12 +186,12 @@ func (b *HelmBroker) Bind(context context.Context, instanceID, bindingID string,
 
 func (b *HelmBroker) Unbind(context context.Context, instanceID, bindingID string, details brokerapi.UnbindDetails) error {
 	b.logger.Debug("unbind", lager.Data{
-		instanceIDLogKey: instanceID,
-		bindingIDLogKey:  bindingID,
-		detailsLogKey:    details,
+		helmicons.InstanceIDLogKey: 		instanceID,
+		helmicons.BindingIDLogKey:  	 	bindingID,
+		helmicons.DetailsLogKey:       	details,
 	})
 
-	exists, err := release.Exists(instanceID, b.helmClient)
+	exists, err := release.Exists(instanceID, b.helmClient, b.logger)
 	if err != nil {
 		return err
 	}
@@ -204,10 +204,10 @@ func (b *HelmBroker) Unbind(context context.Context, instanceID, bindingID strin
 
 func (b *HelmBroker) LastOperation(context context.Context, instanceID, operationData string) (brokerapi.LastOperation, error) {
 	b.logger.Debug("last-operation", lager.Data{
-		instanceIDLogKey: instanceID,
+		helmicons.InstanceIDLogKey: instanceID,
 	})
 
-	status, err := release.GetStatus(instanceID, b.helmClient)
+	status, err := release.GetStatus(instanceID, b.helmClient, b.logger)
 	if err != nil {
 		return brokerapi.LastOperation{
 			State: "failed",

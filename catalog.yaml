@@ -12,7 +12,7 @@ helmi_config:
     connection_timeout: 60
     repos:
     - name: stable
-      url: https://kubernetes.oss-cn-hangzhou.aliyuncs.com/charts
+      url: https://kubernetes-charts.storage.googleapis.com
     - name: monostream
       url: http://monostream-helm.s3-eu-west-1.amazonaws.com/charts
   catalog:

@@ -5,26 +5,15 @@ import (
 	"regexp"
 	"strings"
 	"strconv"
-	"go.uber.org/zap"
 	"github.com/satori/go.uuid"
 	helmi "github.com/wdxxs2z/helmi/pkg/helm"
 	"github.com/wdxxs2z/helmi/pkg/kubectl"
 	"github.com/wdxxs2z/helmi/pkg/catalog"
-	"go.uber.org/zap/zapcore"
+	helmicons "github.com/wdxxs2z/helmi/pkg/constants"
+	"code.cloudfoundry.org/lager"
 	"os"
 	"reflect"
 )
-
-const lookupRegex = `\{\{\s*lookup\s*\(\s*'(?P<type>[\w]+)'\s*,\s*'(?P<path>[\w/:]+)'\s*\)\s*\}\}`
-const lookupRegexType = "type"
-const lookupRegexPath = "path"
-
-const lookupValue    = "value"
-const lookupCluster  = "cluster"
-const lookupUsername = "username"
-const lookupPassword = "password"
-const lookupEnv      = "env"
-const lookupRelease  = "release"
 
 type Status struct {
 	IsFailed    bool
@@ -32,20 +21,21 @@ type Status struct {
 	IsAvailable bool
 }
 
-func getLogger() *zap.Logger {
-	//config := zap.NewProductionConfig()
+func Install(catalog *catalog.Catalog,
+	serviceId string,
+	planId string,
+	id string,
+	acceptsIncomplete bool,
+	parameters map[string]string,
+	context map[string]string,
+	client *helmi.Client,
+	logger lager.Logger) error {
 
-	config := zap.NewDevelopmentConfig()
-	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	config.DisableCaller = true
-	logger, _ := config.Build()
+	logger.Debug("release-install",lager.Data{
+		helmicons.InstanceIDLogKey: id,
+	})
 
-	return logger
-}
-
-func Install(catalog *catalog.Catalog, serviceId string, planId string, id string, acceptsIncomplete bool, parameters map[string]string, context map[string]string, client *helmi.Client) error {
 	name := getName(id)
-	logger := getLogger()
 
 	service, _ := catalog.GetService(serviceId)
 	plan, _ := catalog.GetServicePlan(serviceId, planId)
@@ -56,13 +46,12 @@ func Install(catalog *catalog.Catalog, serviceId string, planId string, id strin
 	chartNamespace := getChartNamespace(context, parameters)
 
 	if chartErr != nil {
-		logger.Error("failed to install release",
-			zap.String("id", id),
-			zap.String("name", name),
-			zap.String("serviceId", serviceId),
-			zap.String("planId", planId),
-			zap.Error(chartErr))
-
+		logger.Error("failed-install-release", chartErr, lager.Data{
+			"id": id,
+			"name": name,
+			"service-id": serviceId,
+			"plan-id": planId,
+		})
 		return chartErr
 	}
 
@@ -73,80 +62,82 @@ func Install(catalog *catalog.Catalog, serviceId string, planId string, id strin
 	_, err := client.InstallRelease(name, chart, chartVersion, chartValues, chartNamespace, acceptsIncomplete)
 
 	if err != nil {
-		logger.Error("failed to install release",
-			zap.String("id", id),
-			zap.String("name", name),
-			zap.String("chart", chart),
-			zap.String("chart-version", chartVersion),
-			zap.String("serviceId", serviceId),
-			zap.String("planId", planId),
-			zap.Error(err))
-
+		logger.Error("failed-install-release", err, lager.Data{
+			"id": id,
+			"name": name,
+			"chart": chart,
+			"chart-version": chartVersion,
+			"service-id": serviceId,
+			"plan-id": planId,
+		})
 		return err
 	}
 
-	logger.Info("new release installed",
-		zap.String("id", id),
-		zap.String("name", name),
-		zap.String("chart", chart),
-		zap.String("chart-version", chartVersion),
-		zap.String("serviceId", serviceId),
-		zap.String("planId", planId))
+	logger.Info("release-new-install-success", lager.Data{
+		"id": id,
+		"name": name,
+		"chart": chart,
+		"chart-version": chartVersion,
+		"serviceId": serviceId,
+		"planId": planId,
+	})
 
 	return nil
 }
 
-func Exists(id string, client *helmi.Client) (bool, error) {
+func Exists(id string, client *helmi.Client, logger lager.Logger) (bool, error) {
+	logger.Debug("release-exist-check",lager.Data{
+		helmicons.InstanceIDLogKey: id,
+	})
 	name := getName(id)
-	logger := getLogger()
-
 	exists, err := client.ExistRelease(name)
 
 	if err != nil {
-		logger.Error("failed to check if release exists",
-			zap.String("id", id),
-			zap.String("name", name),
-			zap.Error(err))
+		logger.Error("release-exist-check-error", err, lager.Data{
+			"id": id,
+			"name": name,
+		})
 	}
-
 	return exists, err
 }
 
-func Delete(id string, client *helmi.Client) error {
+func Delete(id string, client *helmi.Client, logger lager.Logger) error {
+	logger.Debug("release-delete",lager.Data{
+		helmicons.InstanceIDLogKey: id,
+	})
 	name := getName(id)
-	logger := getLogger()
-
 	err := client.DeleteRelease(name)
-
 	if err != nil {
 		exists, existsErr := client.ExistRelease(name)
 
 		if existsErr == nil && !exists {
-			logger.Info("release deleted (not existed)",
-				zap.String("id", id),
-				zap.String("name", name))
-
+			logger.Info("release-instance-not-existed", lager.Data{
+				"id": id,
+				"name": name,
+			})
 			return nil
 		}
 
-		logger.Error("failed to delete release",
-			zap.String("id", id),
-			zap.String("name", name),
-			zap.Error(err))
+		logger.Error("failed-delete-release", err, lager.Data{
+			"id": id,
+			"name": name,
+		})
 
 		return err
 	}
 
-	logger.Info("release deleted",
-		zap.String("id", id),
-		zap.String("name", name))
-
+	logger.Info("release-delete-success", lager.Data{
+		"id": id,
+		"name": name,
+	})
 	return nil
 }
 
-func GetStatus(id string, client *helmi.Client) (Status, error) {
+func GetStatus(id string, client *helmi.Client, logger lager.Logger) (Status, error) {
+	logger.Debug("release-status",lager.Data{
+		helmicons.InstanceIDLogKey: id,
+	})
 	name := getName(id)
-	logger := getLogger()
 
 	status, err := client.GetStatus(name)
 
@@ -154,24 +145,24 @@ func GetStatus(id string, client *helmi.Client) (Status, error) {
 		exists, existsErr := client.ExistRelease(name)
 
 		if existsErr == nil && !exists {
-			logger.Info("asked status for deleted release",
-				zap.String("id", id),
-				zap.String("name", name))
-
+			logger.Info("release-status-delete-already", lager.Data{
+				"id": id,
+				"name": name,
+			})
 			return Status{}, err
 		}
 
-		logger.Error("failed to get release status",
-			zap.String("id", id),
-			zap.String("name", name),
-			zap.Error(err))
-
+		logger.Error("failed-get-release-status", err, lager.Data{
+			"id": id,
+			"name": name,
+		})
 		return Status{}, err
 	}
 
-	logger.Debug("sending release status",
-		zap.String("id", id),
-		zap.String("name", name))
+	logger.Info("release-status-success", lager.Data{
+		"id": id,
+		"name": name,
+	})
 
 	return Status{
 		IsFailed:    status.IsFailed,
@@ -180,10 +171,11 @@ func GetStatus(id string, client *helmi.Client) (Status, error) {
 	}, nil
 }
 
-func GetCredentials(catalog *catalog.Catalog, serviceId string, planId string, id string, client *helmi.Client) (map[string]interface{}, error) {
+func GetCredentials(catalog *catalog.Catalog, serviceId string, planId string, id string, client *helmi.Client, logger lager.Logger) (map[string]interface{}, error) {
+	logger.Debug("release-get-credentials",lager.Data{
+		helmicons.InstanceIDLogKey: id,
+	})
 	name := getName(id)
-	logger := getLogger()
-
 	service, _ := catalog.GetService(serviceId)
 	plan, _ := catalog.GetServicePlan(serviceId, planId)
 
@@ -193,49 +185,46 @@ func GetCredentials(catalog *catalog.Catalog, serviceId string, planId string, i
 		exists, existsErr := client.ExistRelease(name)
 
 		if existsErr == nil && !exists {
-			logger.Info("asked credentials for deleted release",
-				zap.String("id", id),
-				zap.String("name", name))
-
+			logger.Info("release-asked-credentials-delete-already", lager.Data{
+				"id": id,
+				"name": name,
+			})
 			return nil, err
 		}
 
-		logger.Error("failed to get release status",
-			zap.String("id", id),
-			zap.String("name", name),
-			zap.Error(err))
-
+		logger.Error("failed-get-release-status", err, lager.Data{
+			"id": id,
+			"name": name,
+		})
 		return nil, err
 	}
 
 	nodes, err := kubectl.GetNodes()
 
 	if err != nil {
-		logger.Error("failed to get kubernetes nodes",
-			zap.String("id", id),
-			zap.String("name", name),
-			zap.Error(err))
-
+		logger.Error("failed-get-kubernetes-nodes", err, lager.Data{
+			"id": id,
+			"name": name,
+		})
 		return nil, err
 	}
 
 	values, err := client.GetReleaseValues(name)
 
 	if err != nil {
-		logger.Error("failed to get helm values",
-			zap.String("id", id),
-			zap.String("name", name),
-			zap.Error(err))
-
+		logger.Error("failed-get-helm-values", err, lager.Data{
+			"id": id,
+			"name": name,
+		})
 		return nil, err
 	}
 
 	credentials := getUserCredentials(service, plan, nodes, status, values)
 
-	logger.Debug("sending release credentials",
-		zap.String("id", id),
-		zap.String("name", name))
-
+	logger.Info("sending-release-credentials", lager.Data{
+		"id": id,
+		"name": name,
+	})
 	return credentials, nil
 }
 
@@ -311,7 +300,7 @@ func getChartValues(service catalog.CatalogService, plan catalog.CatalogPlan, pa
 	usernames := map[string]string{}
 	passwords := map[string]string{}
 
-	r := regexp.MustCompile(lookupRegex)
+	r := regexp.MustCompile(helmicons.LookupRegex)
 	groupNames := r.SubexpNames()
 
 	for key, template := range templates {
@@ -322,16 +311,16 @@ func getChartValues(service catalog.CatalogService, plan catalog.CatalogPlan, pa
 			for groupKey, groupValue := range r.FindStringSubmatch(m) {
 				groupName := groupNames[groupKey]
 
-				if strings.EqualFold(groupName, lookupRegexType) {
+				if strings.EqualFold(groupName, helmicons.LookupRegexType) {
 					lookupType = groupValue
 				}
 
-				if strings.EqualFold(groupName, lookupRegexPath) {
+				if strings.EqualFold(groupName, helmicons.LookupRegexPath) {
 					lookupPath = groupValue
 				}
 			}
 
-			if strings.EqualFold(lookupType, lookupUsername) {
+			if strings.EqualFold(lookupType, helmicons.LookupUsername) {
 				username := usernames[lookupPath]
 
 				if len(username) == 0 {
@@ -343,7 +332,7 @@ func getChartValues(service catalog.CatalogService, plan catalog.CatalogPlan, pa
 				return username
 			}
 
-			if strings.EqualFold(lookupType, lookupPassword) {
+			if strings.EqualFold(lookupType, helmicons.LookupPassword) {
 				password := passwords[lookupPath]
 
 				if len(password) == 0 {
@@ -355,7 +344,7 @@ func getChartValues(service catalog.CatalogService, plan catalog.CatalogPlan, pa
 				return password
 			}
 
-			if strings.EqualFold(lookupType, lookupEnv) {
+			if strings.EqualFold(lookupType, helmicons.LookupEnv) {
 				env, _ := os.LookupEnv(lookupPath)
 				return env
 			}
@@ -383,7 +372,7 @@ func getUserCredentials(service catalog.CatalogService, plan catalog.CatalogPlan
 		templates[key] = value
 	}
 
-	r := regexp.MustCompile(lookupRegex)
+	r := regexp.MustCompile(helmicons.LookupRegex)
 	groupNames := r.SubexpNames()
 
 	replaceTemplate := func(template string) string {
@@ -393,16 +382,16 @@ func getUserCredentials(service catalog.CatalogService, plan catalog.CatalogPlan
 		for groupKey, groupValue := range r.FindStringSubmatch(template) {
 			groupName := groupNames[groupKey]
 
-			if strings.EqualFold(groupName, lookupRegexType) {
+			if strings.EqualFold(groupName, helmicons.LookupRegexType) {
 				lookupType = groupValue
 			}
 
-			if strings.EqualFold(groupName, lookupRegexPath) {
+			if strings.EqualFold(groupName, helmicons.LookupRegexPath) {
 				lookupPath = groupValue
 			}
 		}
 
-		if strings.EqualFold(lookupType, lookupRelease) {
+		if strings.EqualFold(lookupType, helmicons.LookupRelease) {
 			if strings.EqualFold(lookupPath, "name") {
 				return helmStatus.Name
 			}
@@ -411,22 +400,22 @@ func getUserCredentials(service catalog.CatalogService, plan catalog.CatalogPlan
 			}
 		}
 
-		if strings.EqualFold(lookupType, lookupUsername) {
+		if strings.EqualFold(lookupType, helmicons.LookupUsername) {
 			username := helmValues[lookupPath]
 			return username
 		}
 
-		if strings.EqualFold(lookupType, lookupPassword) {
+		if strings.EqualFold(lookupType, helmicons.LookupPassword) {
 			password := helmValues[lookupPath]
 			return password
 		}
 
-		if strings.EqualFold(lookupType, lookupValue) {
+		if strings.EqualFold(lookupType,helmicons.LookupValue) {
 			value := helmValues[lookupPath]
 			return value
 		}
 
-		if strings.EqualFold(lookupType, lookupCluster) {
+		if strings.EqualFold(lookupType, helmicons.LookupCluster) {
 			if strings.HasPrefix(strings.ToLower(lookupPath), "port") {
 				portParts := strings.Split(lookupPath, ":")
 

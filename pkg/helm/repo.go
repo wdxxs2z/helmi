@@ -28,7 +28,7 @@ func initRepos(env environment.EnvSettings, logger lager.Logger, config config.C
 	for _, repository := range repositorys {
 		err := addrepo(repository.Name, repository.Url, env, logger)
 		if err != nil {
-			return fmt.Errorf("error add %s repo to local cache, the error is: %s", repository, err)
+			return err
 		}
 	}
 	return nil
@@ -45,7 +45,7 @@ func addrepo(name, url string, env environment.EnvSettings, logger lager.Logger)
 	})
 	repo, err := repo.NewChartRepository(&entry, getter.All(env))
 	if err != nil {
-		return fmt.Errorf("create chart repo cause an error: %s", err)
+		return err
 	}
 	return handingRepos(repo, entry, env, logger)
 }
@@ -63,7 +63,7 @@ func handingRepos(r *repo.ChartRepository, e repo.Entry, env environment.EnvSett
 	if err != nil {
 		adderr := addRepoFile(env.Home.RepositoryFile(), e)
 		if adderr != nil{
-			return fmt.Errorf("add repo file to local cause an error: %s", err)
+			return adderr
 		}
 	}
 	return updateRepoFile(env.Home.RepositoryFile(), e, logger)
@@ -81,7 +81,7 @@ func updateRepoFile(file string, e repo.Entry, logger lager.Logger) error {
 	})
 	f, err := repo.LoadRepositoriesFile(file)
 	if err != nil {
-		return fmt.Errorf("update repo file and load the repo file cause an error: %s", err)
+		return err
 	}
 	f.Update(&e)
 	return f.WriteFile(file, 0644)

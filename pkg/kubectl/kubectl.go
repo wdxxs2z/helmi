@@ -18,24 +18,36 @@ type Node struct {
 	ExternalIP string
 }
 
-func createClient() (*kubernetes.Clientset, error){
+func getKubeConfig() (*rest.Config, error) {
 	kubeconfig := os.Getenv("KUBECONFIG")
 	if kubeconfig != "" {
 		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
 			return nil, err
 		}
-		return kubernetes.NewForConfig(config)
+		return config, nil
 	}
-	config, err := rest.InClusterConfig()
-	if err != nil {
+	config, err:= rest.InClusterConfig()
+	if err!= nil {
 		return nil, err
 	}
-	return kubernetes.NewForConfig(config)
+	return config, nil
+}
+
+func GetKubeClient() (*kubernetes.Clientset, *rest.Config, error){
+	kubeconfig, err := getKubeConfig()
+	if err != nil {
+		return nil, nil, err
+	}
+	kubeclient, err := kubernetes.NewForConfig(kubeconfig)
+	if err != nil {
+		return nil, nil, err
+	}
+	return kubeclient, kubeconfig, nil
 }
 
 func CheckVersion() (*version.Info, error){
-	clientset, err := createClient()
+	clientset, _, err := GetKubeClient()
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +61,7 @@ func CheckVersion() (*version.Info, error){
 func GetNodes() ([] Node, error) {
 	var nodes [] Node
 
-	clientset, err := createClient()
+	clientset, _, err := GetKubeClient()
 	if err != nil {
 		return nil, err
 	}

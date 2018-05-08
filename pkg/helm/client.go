@@ -1,10 +1,6 @@
 package helm
 
 import (
-	"k8s.io/client-go/tools/clientcmd"
-	"os"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/helm/pkg/helm"
 	"k8s.io/helm/pkg/helm/portforwarder"
 	"github.com/wdxxs2z/helmi/pkg/config"
@@ -21,6 +17,8 @@ import (
 	"bytes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/helm/pkg/helm/helmpath"
+	"github.com/wdxxs2z/helmi/pkg/kubectl"
+	"strings"
 )
 
 type Client struct {
@@ -31,29 +29,28 @@ type Client struct {
 }
 
 func NewClient (config config.Config, logger lager.Logger) *Client {
+	sessionLogger := logger.Session("helm-client")
+
 	helmEnv := getHelmEnvironment(config)
 	err := handingHelmDirectors(helmEnv.Home)
 	if err != nil {
-		fmt.Errorf("handing the helm director error: %s", err)
+		sessionLogger.Error("handing-helm-directors", err, lager.Data{})
 		return nil
 	}
-	logger.Debug("debug-start-init-helm-repo", lager.Data{"helm-env": helmEnv})
-	err = initRepos(helmEnv, logger, config)
+	err = initRepos(helmEnv, sessionLogger, config)
 	if err != nil {
-		fmt.Errorf("init helm repository error: %s", err)
+		sessionLogger.Error("init-helm-repo", err, lager.Data{})
 		return nil
 	}
-	logger.Debug("debug-start-create-helm-client", lager.Data{})
 	helmClient, err := getHelmClient(config)
 	if err != nil {
-		fmt.Errorf("create helm client error: %s", err)
+		sessionLogger.Error("create-helm-client", err, lager.Data{})
 		return nil
 	}
-	logger.Debug("debug-create-helm-client-success", lager.Data{"client": helmClient})
 	return &Client{
 		helm:		helmClient,
 		env:		helmEnv,
-		logger:		logger.Session("helm-client"),
+		logger:		sessionLogger,
 		config:		config,
 	}
 }
@@ -77,13 +74,22 @@ func (c *Client) ExistRelease(release string) (bool, error) {
 }
 
 func (c *Client) InstallRelease(release string, chartName string, version string, values map[string]string, namespace string, acceptsIncomplete bool) (*rspb.Release, error) {
+	displayValues := make(map[string]string)
+	for name, value := range values {
+		if strings.Contains(name, "Password") || strings.Contains(name, "password") {
+			displayValues[name] = "hidden"
+		} else {
+			displayValues[name] = value
+		}
+	}
 	c.logger.Debug("install-release", lager.Data{
 		"release-name": release,
 		"chart-name": chartName,
 		"version": version,
-		"values": values,
+		"values": displayValues,
 		"namespace": namespace,
 	})
+
 	var wait bool = false
 
 	if acceptsIncomplete == false {
@@ -190,23 +196,6 @@ func getHelmEnvironment(config config.Config) environment.EnvSettings {
 	return envs
 }
 
-func getKubeConfig() (*rest.Config, error) {
-	kubeconfig := os.Getenv("KUBECONFIG")
-	if kubeconfig != "" {
-		return clientcmd.BuildConfigFromFlags("", kubeconfig)
-	}else {
-		return rest.InClusterConfig()
-	}
-}
-
-func getKubeClient() (*kubernetes.Clientset, error){
-	kubeconfig, err := getKubeConfig()
-	if err != nil {
-		return nil, err
-	}
-	return kubernetes.NewForConfig(kubeconfig)
-}
-
 func getHelmClient(config config.Config) (*helm.Client, error){
 	var tillerHost string
 
@@ -214,28 +203,29 @@ func getHelmClient(config config.Config) (*helm.Client, error){
 		tillerHost = config.TillerConfig.Host
 		return helm.NewClient(helm.Host(tillerHost)), nil
 	}else {
-		kubeconfig, err := getKubeConfig()
+		kubeclient, kubeconfig, err := kubectl.GetKubeClient()
 		if err != nil {
-			return nil, fmt.Errorf("get kube config cause an error: %s", err)
-		}
-		client, err := getKubeClient()
-		if err != nil {
-			return nil, fmt.Errorf("get kube client cause an error: %s", err)
+			return nil, err
 		}
 		var tunnel *kube.Tunnel
 		if config.TillerConfig.Namespace != "" {
-			tunnel, err = portforwarder.New(config.TillerConfig.Namespace, client, kubeconfig)
+			tunnel, err = portforwarder.New(config.TillerConfig.Namespace, kubeclient, kubeconfig)
 			if err != nil {
-				return nil, fmt.Errorf("open tunnel cause an error: %s", err)
+				return nil, err
 			}
 		}else {
-			tunnel, err = portforwarder.New("kube-system", client, kubeconfig)
+			tunnel, err = portforwarder.New("kube-system", kubeclient, kubeconfig)
 			if err != nil {
-				return nil, fmt.Errorf("open tunnel cause an error: %s", err)
+				return nil, err
 			}
 		}
 		tillerHost := fmt.Sprintf("127.0.0.1:%d", tunnel.Local)
-		hclient := helm.NewClient(helm.Host(tillerHost))
+		hclient := helm.NewClient(helm.Host(tillerHost), helm.ConnectTimeout(30))
+		if hclient != nil {
+			return hclient, nil
+		} else {
+			return nil, err
+		}
 		return hclient, nil
 	}
 }

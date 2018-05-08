@@ -28,18 +28,18 @@ func getChart(config config.Config, envs environment.EnvSettings, chartName stri
 
 	repos, err := getRepos(config, envs, logger)
 	if err != nil {
-		return nil, fmt.Errorf("get chart cause an error: %s", err)
+		return nil, err
 	}
 
 	chartFile, err := writeChart(config, envs, chartName, chartVersion, repos, logger)
 
 	if err != nil {
-		return nil, fmt.Errorf("get chart cause an error: %s", err)
+		return nil, err
 	}
 
 	helmChart, err := loadChart(chartFile, logger)
 	if err != nil {
-		return nil, fmt.Errorf("get chart cause an error: %s", err)
+		return nil, err
 	}
 	return helmChart, nil
 }
@@ -53,7 +53,7 @@ func getRepos(config config.Config, envs environment.EnvSettings, logger lager.L
 	for _, repo := range repos {
 		err := addrepo(repo.Name, repo.Url, envs, logger)
 		if err != nil {
-			return nil, fmt.Errorf("get repos cause an error: %s", err)
+			return nil, err
 		}
 		rmap[repo.Name] = repo.Url
 	}
@@ -83,7 +83,7 @@ func writeChart(config config.Config,
 			if repoName == name {
 				chartExist, curl, err := findChartWithUrl(realChart, chartVersion, url, envs)
 				if err != nil {
-					return "", fmt.Errorf("find chart cause an error: %s", err)
+					return "", err
 				} else if chartExist == true {
 					chartUrl = curl
 					exist = true
@@ -129,7 +129,7 @@ func downloadChart(url string, version string, envs environment.EnvSettings, log
 
 	filename, _, err := dl.DownloadTo(url, version, envs.Home.Archive())
 	if err != nil {
-		return "", fmt.Errorf("download chart cause an error: %s", err)
+		return "", err
 	}
 	logger.Debug("download-chart-success",lager.Data{"filename": filename})
 	return filename, nil
@@ -142,7 +142,7 @@ func loadChart(filename string, logger lager.Logger) (*chart.Chart, error) {
 
 	lname, err := filepath.Abs(filename)
 	if err != nil {
-		return nil, fmt.Errorf("load chart and get file cause error: %s", err)
+		return nil, err
 	}
 
 	chartRequested, err := chartutil.Load(lname)
