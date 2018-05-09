@@ -1,5 +1,5 @@
 # helmi
-Open Service Broker API Implementation using helm &amp; kubectl
+Open Service Broker API Implementation using helm client api &amp; kubernetes client api
 
 ![alt Logo](docs/logo.png)
 
@@ -54,6 +54,17 @@ Configure the values.
 | `kubeconfig.*`|Must set the kubeconfig,support oidc,token.|"xxxxxx"|
 | `tls.cacert`|Must set the kube ca cert.|"xxxxxx"|
 | `service_config.services.*`|Support backend services,contain the service repo and version.|"mariadb,redis,mongodb,minio,rabbitmq,cassandra"|
+| `service_config.loglevel`|log level|DEBUG|
+| `service_config.allow_user_bind_parameters`|when we bind service instance, can with parameter|true|
+| `service_config.allow_user_provision_parameters`|when we create service instance, can with parameter|true|
+| `service_config.allow_user_update_parameters`|when we update service instance, can with parameter|true|
+| `service_config.allow_user_bind_parameters`|when we bind service instance, can with parameter|true|
+| `service_config.cluster_dns_name`|kubernetes provide 4 service type, if use cluster ip, maybe use it.|svc.cluster.local|
+| `helmi.tillerhost`|tiller server host,default is ""|""|
+| `helmi.namespace`|tiller server namespace|kube-system|
+| `helmi.home`|helm client home director|".helm"|
+| `helmi.connection_timeout`|helm client connection server timeout|60|
+| `helmi.repos`|set of repository url and name|stable->google.....|
 
 Install the helmi release.
 

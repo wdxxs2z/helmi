@@ -528,28 +528,7 @@ func getUserCredentials(service catalog.CatalogService, plan catalog.CatalogPlan
 		}
 	}
 
-	newValues := make(map[string]interface{})
-	for name, value := range values {
-		if len(helmStatus.NodePorts) != 0 {
-			if strings.Contains(value.(string), "|") && strings.Contains(value.(string), ">") {
-				rs := substring(value.(string), "<", ">")
-				v := strings.Replace(strings.Replace(rs, " |", "", -1), "| ", "", -1)
-				newValues[name] = v
-			} else {
-				newValues[name] = value
-			}
-		}else {
-			if strings.Contains(value.(string), "|") && strings.Contains(value.(string), ">") {
-				rs := substring(value.(string), "|", "|")
-				v := strings.Replace(strings.Replace(rs, "< ", "", -1), " >", "",-1)
-				newValues[name] = v
-			}else {
-				newValues[name] = value
-			}
-		}
-	}
-
-	return newValues
+	return values
 }
 
 func substring(s, begin, last string)  string {

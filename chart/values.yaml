@@ -57,6 +57,7 @@ service_config:
   allow_user_provision_parameters: true
   allow_user_update_parameters: true
   allow_user_bind_parameters: true
+  cluster_dns_name: svc.cluster.local
   services:
     mariadb:
       chart: stable/mariadb

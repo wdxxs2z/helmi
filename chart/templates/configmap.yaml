@@ -29,6 +29,7 @@ data:
       allow_user_provision_parameters: {{ .Values.service_config.allow_user_provision_parameters }}
       allow_user_update_parameters: {{ .Values.service_config.allow_user_update_parameters }}
       allow_user_bind_parameters: {{ .Values.service_config.allow_user_bind_parameters }}
+      cluster_dns_name: {{ .Values.service_config.cluster_dns_name }}
       tille_config:
         host: {{ .Values.helmi.tillerhost }}
         namespace: {{ .Values.helmi.namespace }}
@@ -62,12 +63,12 @@ data:
             mariadbRootPassword: "\{\{ lookup('password', 'mariadbRootPassword') \}\}"
             mariadbDatabase: db
           user-credentials:
-            uri: "mysql://\{\{ lookup('username', 'mariadbUser') \}\}:\{\{ lookup('password', 'mariadbPassword') \}\}@\{\{ lookup('release', 'name') \}\}-mariadb.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local:\{\{ lookup('cluster', 'port') \}\}/\{\{ lookup('value', 'mariadbDatabase') \}\}"
-            jdbcUrl: "jdbc:mysql://\{\{ lookup('release', 'name') \}\}-mariadb.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local:\{\{ lookup('cluster', 'port') \}\}/\{\{ lookup('value', 'mariadbDatabase') \}\}?user=\{\{ lookup('username', 'mariadbUser') \}\}\u0026password=\{\{ lookup('password', 'mariadbPassword') \}\}"
+            uri: "mysql://\{\{ lookup('username', 'mariadbUser') \}\}:\{\{ lookup('password', 'mariadbPassword') \}\}@\{\{ lookup('cluster', 'address') \}\}:\{\{ lookup('cluster', 'port') \}\}/\{\{ lookup('value', 'mariadbDatabase') \}\}"
+            jdbcUrl: "jdbc:mysql://\{\{ lookup('cluster', 'address') \}\}:\{\{ lookup('cluster', 'port') \}\}/\{\{ lookup('value', 'mariadbDatabase') \}\}?user=\{\{ lookup('username', 'mariadbUser') \}\}\u0026password=\{\{ lookup('password', 'mariadbPassword') \}\}"
             username: "\{\{ lookup('username', 'mariadbUser') \}\}"
             password: "\{\{ lookup('password', 'mariadbPassword') \}\}"
             database: "\{\{ lookup('value', 'mariadbDatabase') \}\}"
-            hostname: "\{\{ lookup('release', 'name') \}\}-mariadb.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local"
+            hostname: "\{\{ lookup('cluster', 'address') \}\}"
             port: "\{\{ lookup('cluster', 'port') \}\}"
           plans:
           -
@@ -111,11 +112,11 @@ data:
             accessKey: "AKIAIOSFODNN7EXAMPLE"
             secretKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
           user-credentials:
-            uri: "http://\{\{ lookup('value', 'accessKey') \}\}:\{\{ lookup('value', 'secretKey') \}\}@\{\{ lookup('release', 'name') \}\}-minio.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local:\{\{ lookup('cluster', 'port') \}\}/"
+            uri: "http://\{\{ lookup('value', 'accessKey') \}\}:\{\{ lookup('value', 'secretKey') \}\}@\{\{ lookup('cluster', 'address') \}\}:\{\{ lookup('cluster', 'port') \}\}/"
             endpoint: "\{\{ lookup('cluster', 'address') \}\}:\{\{ lookup('cluster', 'port') \}\}"
             accessKey: "\{\{ lookup('value', 'accessKey') \}\}"
             secretKey: "\{\{ lookup('value', 'secretKey') \}\}"
-            hostname: "\{\{ lookup('release', 'name') \}\}-minio.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local"
+            hostname: "\{\{ lookup('cluster', 'address') \}\}"
             port: "\{\{ lookup('cluster', 'port') \}\}"
             region: "us-west-1"
             pathStyleAccess: true
@@ -158,10 +159,10 @@ data:
             rabbitmqUsername: "\{\{ lookup('username', 'rabbitmqUsername') \}\}"
             rabbitmqPassword: "\{\{ lookup('password', 'rabbitmqPassword') \}\}"
           user-credentials:
-            uri: "amqp://\{\{ lookup('username', 'rabbitmqUsername') \}\}:\{\{ lookup('password', 'rabbitmqPassword') \}\}@\{\{ lookup('release', 'name') \}\}-rabbitmq.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local:\{\{ lookup('cluster', 'port:5672') \}\}/"
+            uri: "amqp://\{\{ lookup('username', 'rabbitmqUsername') \}\}:\{\{ lookup('password', 'rabbitmqPassword') \}\}@\{\{ lookup('cluster', 'address') \}\}:\{\{ lookup('cluster', 'port:5672') \}\}/"
             username: "\{\{ lookup('username', 'rabbitmqUsername') \}\}"
             password: "\{\{ lookup('password', 'rabbitmqPassword') \}\}"
-            hostname: "\{\{ lookup('release', 'name') \}\}-rabbitmq.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local"
+            hostname: "\{\{ lookup('cluster', 'address') \}\}"
             port: "\{\{ lookup('cluster', 'port:5672') \}\}"
             vhost: ""
             ssl: false
@@ -206,11 +207,11 @@ data:
             mongodbRootPassword:  "\{\{ lookup('password', 'mongodbRootPassword') \}\}"
             mongodbDatabase: db
           user-credentials:
-            uri: "mongodb://\{\{ lookup('username', 'mongodbUsername') \}\}:\{\{ lookup('password', 'mongodbPassword') \}\}@\{\{ lookup('release', 'name') \}\}-mongodb.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local:\{\{ lookup('cluster', 'port') \}\}/\{\{ lookup('value', 'mongodbDatabase') \}\}"
+            uri: "mongodb://\{\{ lookup('username', 'mongodbUsername') \}\}:\{\{ lookup('password', 'mongodbPassword') \}\}@\{\{ lookup('cluster', 'address') \}\}:\{\{ lookup('cluster', 'port') \}\}/\{\{ lookup('value', 'mongodbDatabase') \}\}"
             username: "\{\{ lookup('username', 'mongodbUsername') \}\}"
             password: "\{\{ lookup('password', 'mongodbPassword') \}\}"
             database: "\{\{ lookup('value', 'mongodbDatabase') \}\}"
-            hostname: "\{\{ lookup('release', 'name') \}\}-mongodb.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local"
+            hostname: "\{\{ lookup('cluster', 'address') \}\}"
             port: "\{\{ lookup('cluster', 'port') \}\}"
           plans:
           -
@@ -250,7 +251,7 @@ data:
           chart-values:
             redisPassword: "\{\{ lookup('password', 'redisPassword') \}\}"
           user-credentials:
-            uri: "redis://:\{\{ lookup('password', 'redisPassword') \}\}@\{\{ lookup('release', 'name') \}\}-redis.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local:\{\{ lookup('cluster', 'port') \}\}"
+            uri: "redis://:\{\{ lookup('password', 'redisPassword') \}\}@\{\{ lookup('cluster', 'address') \}\}:\{\{ lookup('cluster', 'port') \}\}"
             password: "\{\{ lookup('password', 'redisPassword') \}\}"
             hostname: "\{\{ lookup('cluster', 'address') \}\}"
             port: "\{\{ lookup('cluster', 'port') \}\}"
@@ -293,10 +294,10 @@ data:
             cassandraUsername: "\{\{ lookup('username', 'cassandraUsername') \}\}"
             cassandraPassword: "\{\{ lookup('password', 'cassandraPassword') \}\}"
           user-credentials:
-            jdbcUrl: "jdbc:cassandra://\{\{ lookup('username', 'cassandraUsername') \}\}:\{\{ lookup('password', 'cassandraPassword') \}\}@\{\{ lookup('release', 'name') \}\}-cassandra.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local:\{\{ lookup('cluster', 'port:9042') \}\}"
-            uri: "cassandra://\{\{ lookup('username', 'cassandraUsername') \}\}:\{\{ lookup('password', 'cassandraPassword') \}\}@\{\{ lookup('release', 'name') \}\}-cassandra.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local:\{\{ lookup('cluster', 'port:9042') \}\}"
+            jdbcUrl: "jdbc:cassandra://\{\{ lookup('username', 'cassandraUsername') \}\}:\{\{ lookup('password', 'cassandraPassword') \}\}@\{\{ lookup('cluster', 'address') \}\}:\{\{ lookup('cluster', 'port:9042') \}\}"
+            uri: "cassandra://\{\{ lookup('username', 'cassandraUsername') \}\}:\{\{ lookup('password', 'cassandraPassword') \}\}@\{\{ lookup('cluster', 'address') \}\}:\{\{ lookup('cluster', 'port:9042') \}\}"
             node_ips:
-            - "\{\{ lookup('release', 'name') \}\}-cassandra.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local"
+            - "\{\{ lookup('cluster', 'address') \}\}"
             cql_port: "\{\{ lookup('cluster', 'port:9042') \}\}"
             thrift_port: "\{\{ lookup('cluster', 'port:9160') \}\}"
             username: "\{\{ lookup('username', 'cassandraUsername') \}\}"
@@ -361,9 +362,9 @@ data:
             muescheliUsername: "\{\{ lookup('username', 'muescheliUsername') \}\}"
             muescheliPassword: "\{\{ lookup('password', 'muescheliPassword') \}\}"
           user-credentials:
-            uri: "http://\{\{ lookup('username', 'muescheliUsername') \}\}:\{\{ lookup('password', 'muescheliPassword') \}\}@\{\{ lookup('release', 'name') \}\}-muescheli.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local:\{\{ lookup('cluster', 'port:8091') \}\}"
+            uri: "http://\{\{ lookup('username', 'muescheliUsername') \}\}:\{\{ lookup('password', 'muescheliPassword') \}\}@\{\{ lookup('cluster', 'address') \}\}:\{\{ lookup('cluster', 'port:8091') \}\}"
             port: "\{\{ lookup('cluster', 'port:8091') \}\}"
-            hostname: "\{\{ lookup('release', 'name') \}\}-muescheli.\{\{ lookup('release', 'namespace') \}\}.svc.cluster.local"
+            hostname: "\{\{ lookup('cluster', 'address') \}\}"
             username: "\{\{ lookup('username', 'muescheliUsername') \}\}"
             password: "\{\{ lookup('password', 'muescheliPassword') \}\}"
           plans:

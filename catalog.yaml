@@ -91,11 +91,11 @@ helmi_config:
         accessKey: "AKIAIOSFODNN7EXAMPLE"
         secretKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
       user-credentials:
-        uri: "http://{{ lookup('value', 'accessKey') }}:{{ lookup('value', 'secretKey') }}@{{ lookup('release', 'name') }}-minio.{{ lookup('release', 'namespace') }}.svc.cluster.local:{{ lookup('cluster', 'port') }}/"
+        uri: "http://{{ lookup('value', 'accessKey') }}:{{ lookup('value', 'secretKey') }}@{{ lookup('cluster','address') }}:{{ lookup('cluster', 'port') }}/"
         endpoint: "{{ lookup('cluster', 'address') }}:{{ lookup('cluster', 'port') }}"
         accessKey: "{{ lookup('value', 'accessKey') }}"
         secretKey: "{{ lookup('value', 'secretKey') }}"
-        hostname: "{{ lookup('release', 'name') }}-minio.{{ lookup('release', 'namespace') }}.svc.cluster.local"
+        hostname: "{{ lookup('cluster','address') }}"
         port: "{{ lookup('cluster', 'port') }}"
         region: "us-west-1"
         pathStyleAccess: true
@@ -138,10 +138,10 @@ helmi_config:
         rabbitmqUsername: "{{ lookup('username', 'rabbitmqUsername') }}"
         rabbitmqPassword: "{{ lookup('password', 'rabbitmqPassword') }}"
       user-credentials:
-        uri: "amqp://{{ lookup('username', 'rabbitmqUsername') }}:{{ lookup('password', 'rabbitmqPassword') }}@{{ lookup('release', 'name') }}-rabbitmq.{{ lookup('release', 'namespace') }}.svc.cluster.local:{{ lookup('cluster', 'port:5672') }}/"
+        uri: "amqp://{{ lookup('username', 'rabbitmqUsername') }}:{{ lookup('password', 'rabbitmqPassword') }}@{{ lookup('cluster','address') }}:{{ lookup('cluster', 'port:5672') }}/"
         username: "{{ lookup('username', 'rabbitmqUsername') }}"
         password: "{{ lookup('password', 'rabbitmqPassword') }}"
-        hostname: "{{ lookup('release', 'name') }}-rabbitmq.{{ lookup('release', 'namespace') }}.svc.cluster.local"
+        hostname: "{{ lookup('cluster','address') }}"
         port: "{{ lookup('cluster', 'port:5672') }}"
         vhost: ""
         ssl: false
@@ -186,11 +186,11 @@ helmi_config:
         mongodbRootPassword:  "{{ lookup('password', 'mongodbRootPassword') }}"
         mongodbDatabase: db
       user-credentials:
-        uri: "mongodb://{{ lookup('username', 'mongodbUsername') }}:{{ lookup('password', 'mongodbPassword') }}@{{ lookup('release', 'name') }}-mongodb.{{ lookup('release', 'namespace') }}.svc.cluster.local:{{ lookup('cluster', 'port') }}/{{ lookup('value', 'mongodbDatabase') }}"
+        uri: "mongodb://{{ lookup('username', 'mongodbUsername') }}:{{ lookup('password', 'mongodbPassword') }}@{{ lookup('cluster','address') }}:{{ lookup('cluster', 'port') }}/{{ lookup('value', 'mongodbDatabase') }}"
         username: "{{ lookup('username', 'mongodbUsername') }}"
         password: "{{ lookup('password', 'mongodbPassword') }}"
         database: "{{ lookup('value', 'mongodbDatabase') }}"
-        hostname: "{{ lookup('release', 'name') }}-mongodb.{{ lookup('release', 'namespace') }}.svc.cluster.local"
+        hostname: "{{ lookup('cluster','address') }}"
         port: "{{ lookup('cluster', 'port') }}"
       plans:
       -
@@ -230,7 +230,7 @@ helmi_config:
       chart-values:
         redisPassword: "{{ lookup('password', 'redisPassword') }}"
       user-credentials:
-        uri: "redis://:{{ lookup('password', 'redisPassword') }}@{{ lookup('release', 'name') }}-redis.{{ lookup('release', 'namespace') }}.svc.cluster.local:{{ lookup('cluster', 'port') }}"
+        uri: "redis://:{{ lookup('password', 'redisPassword') }}@{{ lookup('cluster','address') }}:{{ lookup('cluster', 'port') }}"
         password: "{{ lookup('password', 'redisPassword') }}"
         hostname: "{{ lookup('cluster', 'address') }}"
         port: "{{ lookup('cluster', 'port') }}"
@@ -273,10 +273,10 @@ helmi_config:
         cassandraUsername: "{{ lookup('username', 'cassandraUsername') }}"
         cassandraPassword: "{{ lookup('password', 'cassandraPassword') }}"
       user-credentials:
-        jdbcUrl: "jdbc:cassandra://{{ lookup('username', 'cassandraUsername') }}:{{ lookup('password', 'cassandraPassword') }}@{{ lookup('release', 'name') }}-cassandra.{{ lookup('release', 'namespace') }}.svc.cluster.local:{{ lookup('cluster', 'port:9042') }}"
-        uri: "cassandra://{{ lookup('username', 'cassandraUsername') }}:{{ lookup('password', 'cassandraPassword') }}@{{ lookup('release', 'name') }}-cassandra.{{ lookup('release', 'namespace') }}.svc.cluster.local:{{ lookup('cluster', 'port:9042') }}"
+        jdbcUrl: "jdbc:cassandra://{{ lookup('username', 'cassandraUsername') }}:{{ lookup('password', 'cassandraPassword') }}@{{ lookup('cluster','address') }}:{{ lookup('cluster', 'port:9042') }}"
+        uri: "cassandra://{{ lookup('username', 'cassandraUsername') }}:{{ lookup('password', 'cassandraPassword') }}@{{ lookup('cluster','address') }}:{{ lookup('cluster', 'port:9042') }}"
         node_ips:
-        - "{{ lookup('release', 'name') }}-cassandra.{{ lookup('release', 'namespace') }}.svc.cluster.local"
+        - "{{ lookup('cluster','address') }}"
         cql_port: "{{ lookup('cluster', 'port:9042') }}"
         thrift_port: "{{ lookup('cluster', 'port:9160') }}"
         username: "{{ lookup('username', 'cassandraUsername') }}"
@@ -341,9 +341,9 @@ helmi_config:
         muescheliUsername: "{{ lookup('username', 'muescheliUsername') }}"
         muescheliPassword: "{{ lookup('password', 'muescheliPassword') }}"
       user-credentials:
-        uri: "http://{{ lookup('username', 'muescheliUsername') }}:{{ lookup('password', 'muescheliPassword') }}@{{ lookup('release', 'name') }}-muescheli.{{ lookup('release', 'namespace') }}.svc.cluster.local:{{ lookup('cluster', 'port:8091') }}"
+        uri: "http://{{ lookup('username', 'muescheliUsername') }}:{{ lookup('password', 'muescheliPassword') }}@{{ lookup('cluster','address') }}:{{ lookup('cluster', 'port:8091') }}"
         port: "{{ lookup('cluster', 'port:8091') }}"
-        hostname: "{{ lookup('release', 'name') }}-muescheli.{{ lookup('release', 'namespace') }}.svc.cluster.local"
+        hostname: "{{ lookup('cluster','address') }}"
         username: "{{ lookup('username', 'muescheliUsername') }}"
         password: "{{ lookup('password', 'muescheliPassword') }}"
       plans:
