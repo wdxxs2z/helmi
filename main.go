@@ -54,6 +54,8 @@ func main() {
 	os.Setenv("USERNAME", config.Username)
 	os.Setenv("PASSWORD", config.Password)
 
+	os.Setenv("CLUSTER_DNS", config.HelmiConfig.ClusterDnsName)
+
 	helmClient := helmi.NewClient(config.HelmiConfig, logger)
 
 	helmibroker := broker.New(config.HelmiConfig, helmClient, logger)

@@ -8,6 +8,7 @@ type Config struct {
 	AllowUserProvisionParameters bool    		`yaml:"allow_user_provision_parameters"`
 	AllowUserUpdateParameters    bool    		`yaml:"allow_user_update_parameters"`
 	AllowUserBindParameters      bool               `yaml:"allow_user_bind_parameters"`
+	ClusterDnsName		     string             `yaml:"cluster_dns_name"`
 	TillerConfig                 TillerSet		`yaml:"tille_config"`
 	Catalog			     catalog.Catalog	`yaml:"catalog"`
 }

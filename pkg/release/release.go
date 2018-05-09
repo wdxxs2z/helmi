@@ -13,6 +13,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"os"
 	"reflect"
+	"fmt"
 )
 
 type Status struct {
@@ -180,6 +181,8 @@ func GetCredentials(catalog *catalog.Catalog, serviceId string, planId string, i
 	plan, _ := catalog.GetServicePlan(serviceId, planId)
 
 	status, err := client.GetStatus(name)
+
+	fmt.Println(status)
 
 	if err != nil {
 		exists, existsErr := client.ExistRelease(name)
@@ -419,6 +422,10 @@ func getUserCredentials(service catalog.CatalogService, plan catalog.CatalogPlan
 			if strings.HasPrefix(strings.ToLower(lookupPath), "port") {
 				portParts := strings.Split(lookupPath, ":")
 
+				if len(helmStatus.IngressPorts) > 0 {
+					return strconv.Itoa(helmStatus.IngressPorts[0])
+				}
+
 				for clusterPort, nodePort := range helmStatus.NodePorts {
 					if len(portParts) == 1 || strings.EqualFold(strconv.Itoa(clusterPort), portParts[1]) {
 						return strconv.Itoa(nodePort)
@@ -442,16 +449,30 @@ func getUserCredentials(service catalog.CatalogService, plan catalog.CatalogPlan
 					return value
 				}
 
-				for _, node := range kubernetesNodes {
-					if len(node.ExternalIP) > 0 {
-						return node.ExternalIP
-					}
+				if len(helmStatus.IngressHosts) > 0 {
+					return helmStatus.IngressHosts[0]
 				}
 
-				for _, node := range kubernetesNodes {
-					if len(node.InternalIP) > 0 {
-						return node.InternalIP
+				if helmStatus.ServiceType == "ClusterIP" {
+					if value, ok := os.LookupEnv("CLUSTER_DNS"); ok {
+						return fmt.Sprintf("%s-%s.%s.%s", helmStatus.Name, service.Name, helmStatus.Namespace, value)
 					}
+
+				} else if helmStatus.ServiceType == "NodePort" {
+					for _, node := range kubernetesNodes {
+						if len(node.ExternalIP) > 0 {
+							return node.ExternalIP
+						}
+					}
+					for _, node := range kubernetesNodes {
+						if len(node.InternalIP) > 0 {
+							return node.InternalIP
+						}
+					}
+				} else if helmStatus.ServiceType == "LoadBalancer" {
+					//TODO
+				} else if helmStatus.ServiceType == "ExternalName" {
+					//TODO
 				}
 			}
 
@@ -507,5 +528,33 @@ func getUserCredentials(service catalog.CatalogService, plan catalog.CatalogPlan
 		}
 	}
 
-	return values
+	newValues := make(map[string]interface{})
+	for name, value := range values {
+		if len(helmStatus.NodePorts) != 0 {
+			if strings.Contains(value.(string), "|") && strings.Contains(value.(string), ">") {
+				rs := substring(value.(string), "<", ">")
+				v := strings.Replace(strings.Replace(rs, " |", "", -1), "| ", "", -1)
+				newValues[name] = v
+			} else {
+				newValues[name] = value
+			}
+		}else {
+			if strings.Contains(value.(string), "|") && strings.Contains(value.(string), ">") {
+				rs := substring(value.(string), "|", "|")
+				v := strings.Replace(strings.Replace(rs, "< ", "", -1), " >", "",-1)
+				newValues[name] = v
+			}else {
+				newValues[name] = value
+			}
+		}
+	}
+
+	return newValues
+}
+
+func substring(s, begin, last string)  string {
+	start := strings.Index(s, begin)
+	end := strings.LastIndex(s, last)
+	rs := strings.Replace(s, s[start:end + 1], "", -1)
+	return rs
 }

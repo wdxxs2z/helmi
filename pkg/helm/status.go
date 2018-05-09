@@ -22,6 +22,9 @@ const (
 	CurrentLabel = "CURRENT"
 	AvailableLabel = "AVAILABLE"
 	PortsLabel = "PORT(S)"
+	TypeLabel = "TYPE"
+	IngressHostsLabel = "HOSTS"
+	IngressPortsLabel = "PORTS"
 )
 
 type Status struct {
@@ -35,6 +38,11 @@ type Status struct {
 
 	NodePorts map[int] int
 	ClusterPorts map[int] int
+
+	IngressHosts []string
+	IngressPorts []int
+
+	ServiceType string
 }
 
 func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time, deployed bool, rawdata []byte) (Status, error) {
@@ -53,6 +61,9 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 	columnCurrent := -1
 	columnAvailable := -1
 	columnPort := -1
+	columnType := -1
+	columnIngressHosts := -1
+	columnIngressPorts := -1
 
 	var lastResource string
 
@@ -66,6 +77,9 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 			columnCurrent = -1
 			columnAvailable = -1
 			columnPort = -1
+			columnType = -1
+			columnIngressHosts = -1
+			columnIngressPorts = -1
 		}
 
 		if strings.HasPrefix(line, ResourcePrefix) {
@@ -76,6 +90,9 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 		indexCurrent := strings.Index(line, CurrentLabel)
 		indexAvailable := strings.Index(line, AvailableLabel)
 		indexPort := strings.Index(line, PortsLabel)
+		indexType := strings.Index(line, TypeLabel)
+		indexIngressHosts := strings.Index(line, IngressHostsLabel)
+		indexIngressPorts := strings.Index(line, IngressPortsLabel)
 
 		if indexDesired >= 0 && indexCurrent >= 0 {
 			columnDesired = indexDesired
@@ -113,10 +130,36 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 			}
 		}
 
-		if indexPort >= 0 {
-			columnPort = indexPort
+		if indexIngressHosts >= 0 {
+			columnIngressHosts = indexIngressHosts
 		} else {
-			if columnPort >= 0 {
+			if columnIngressHosts >= 0 {
+				status.IngressHosts = strings.Split(strings.Fields(line[columnIngressHosts:])[0], ",")
+			}
+		}
+
+		if indexIngressPorts >= 0 {
+			columnIngressPorts = indexIngressPorts
+		} else {
+			if columnIngressPorts >= 0 {
+				s := strings.Split(strings.Fields(line[columnIngressPorts:])[0], ",")
+				for index, port := range s {
+					ingressPort, ingressPortErr := strconv.Atoi(port)
+					if ingressPortErr == nil {
+						status.IngressPorts[index] = ingressPort
+					}
+				}
+
+			}
+		}
+
+		if indexPort >= 0 && indexType >= 0 {
+			columnPort = indexPort
+			columnType = indexType
+		} else {
+			if columnPort >= 0 && columnType >= 0 {
+				status.ServiceType = strings.Fields(line[columnType:])[0]
+
 				for _, portPair := range strings.Split(strings.Fields(line[columnPort:])[0], ",") {
 					portFields := strings.FieldsFunc(portPair, func(c rune) bool {
 						return c == ':' || c == '/'
@@ -127,6 +170,7 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 
 						if clusterPortErr == nil {
 							status.ClusterPorts[clusterPort] = clusterPort
+
 						}
 					}
 

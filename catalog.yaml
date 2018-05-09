@@ -5,6 +5,7 @@ helmi_config:
   allow_user_provision_parameters: true
   allow_user_update_parameters: true
   allow_user_bind_parameters: true
+  cluster_dns_name: svc.cluster.local
   tille_config:
     host:
     namespace: kube-system
@@ -41,12 +42,12 @@ helmi_config:
         mariadbRootPassword: "{{ lookup('password', 'mariadbRootPassword') }}"
         mariadbDatabase: db
       user-credentials:
-        uri: "mysql://{{ lookup('username', 'mariadbUser') }}:{{ lookup('password', 'mariadbPassword') }}@{{ lookup('release', 'name') }}-mariadb.{{ lookup('release', 'namespace') }}.svc.cluster.local:{{ lookup('cluster', 'port') }}/{{ lookup('value', 'mariadbDatabase') }}"
-        jdbcUrl: "jdbc:mysql://{{ lookup('release', 'name') }}-mariadb.{{ lookup('release', 'namespace') }}.svc.cluster.local:{{ lookup('cluster', 'port') }}/{{ lookup('value', 'mariadbDatabase') }}?user={{ lookup('username', 'mariadbUser') }}\u0026password={{ lookup('password', 'mariadbPassword') }}"
+        uri: "mysql://{{ lookup('username', 'mariadbUser') }}:{{ lookup('password', 'mariadbPassword') }}@{{ lookup('cluster','address') }}:{{ lookup('cluster', 'port') }}/{{ lookup('value', 'mariadbDatabase') }}"
+        jdbcUrl: "jdbc:mysql://{{ lookup('cluster','address') }}:{{ lookup('cluster', 'port') }}/{{ lookup('value', 'mariadbDatabase') }}?user={{ lookup('username', 'mariadbUser') }}\u0026password={{ lookup('password', 'mariadbPassword') }}"
         username: "{{ lookup('username', 'mariadbUser') }}"
         password: "{{ lookup('password', 'mariadbPassword') }}"
         database: "{{ lookup('value', 'mariadbDatabase') }}"
-        hostname: "{{ lookup('release', 'name') }}-mariadb.{{ lookup('release', 'namespace') }}.svc.cluster.local"
+        hostname: "{{ lookup('cluster','address') }}"
         port: "{{ lookup('cluster', 'port') }}"
       plans:
       -

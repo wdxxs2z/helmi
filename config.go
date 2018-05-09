@@ -58,5 +58,9 @@ func (c Config) Validate() error {
 		return errors.New("Must provide a non-empty Password")
 	}
 
+	if c.HelmiConfig.ClusterDnsName == "" {
+		return errors.New("Must provide a non-empty kubernetes cluster dns suffix")
+	}
+
 	return nil
 }
