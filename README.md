@@ -65,6 +65,7 @@ Configure the values.
 | `helmi.home`|helm client home director|".helm"|
 | `helmi.connection_timeout`|helm client connection server timeout|60|
 | `helmi.repos`|set of repository url and name|stable->google.....|
+|`chart-offline mode`|service catalog support offline chart file|catalog/service_name/xxx.tgz|
 
 Install the helmi release.
 

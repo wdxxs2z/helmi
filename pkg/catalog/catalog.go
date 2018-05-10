@@ -25,6 +25,7 @@ type CatalogService struct {
 
 	Chart        		string            	`yaml:"chart"`
 	ChartVersion 		string            	`yaml:"chart-version"`
+	ChartOffline            string                  `yaml:"chart-offline"`
 	ChartValues  		map[string]string 	`yaml:"chart-values"`
 
 	UserCredentials 	map[string]interface{} `yaml:"user-credentials"`

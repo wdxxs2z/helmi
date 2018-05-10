@@ -36,6 +36,7 @@ helmi_config:
         supportUrl: "https://mariadb.org/"
       chart: stable/mariadb
       chart-version: 1.0.7
+      chart-offline: catalog/mariadb/mariadb-1.0.7.tgz
       chart-values:
         mariadbUser: "{{ lookup('username', 'mariadbUser') }}"
         mariadbPassword: "{{ lookup('password', 'mariadbPassword') }}"
@@ -86,6 +87,7 @@ helmi_config:
         supportUrl: "https://www.minio.io/"
       chart: stable/minio
       chart-version: 0.3.0
+      chart-offline: catalog/minio/minio-0.3.0.tgz
       chart-values:
         mode: "standalone"
         accessKey: "AKIAIOSFODNN7EXAMPLE"
@@ -134,6 +136,7 @@ helmi_config:
         supportUrl: "https://mariadb.org/"
       chart: stable/rabbitmq
       chart-version: 0.6.8
+      chart-offline: catalog/rabbitmq/rabbitmq-0.6.8.tgz
       chart-values:
         rabbitmqUsername: "{{ lookup('username', 'rabbitmqUsername') }}"
         rabbitmqPassword: "{{ lookup('password', 'rabbitmqPassword') }}"
@@ -180,6 +183,7 @@ helmi_config:
         supportUrl: "https://www.mongodb.com/"
       chart: stable/mongodb
       chart-version: 0.4.9
+      chart-offline: catalog/mongodb/mongodb-0.4.9.tgz
       chart-values:
         mongodbUsername: "{{ lookup('username', 'mongodbUsername') }}"
         mongodbPassword: "{{ lookup('password', 'mongodbPassword') }}"
@@ -227,6 +231,7 @@ helmi_config:
         supportUrl: "https://redis.io/"
       chart: stable/redis
       chart-version: 0.9.0
+      chart-offline: catalog/redis/redis-0.9.0.tgz
       chart-values:
         redisPassword: "{{ lookup('password', 'redisPassword') }}"
       user-credentials:
@@ -269,6 +274,7 @@ helmi_config:
         supportUrl: ""
       chart: monostream/cassandra
       chart-version: 0.2.7
+      chart-offline: catalog/cassandra/cassandra-0.2.7.tgz
       chart-values:
         cassandraUsername: "{{ lookup('username', 'cassandraUsername') }}"
         cassandraPassword: "{{ lookup('password', 'cassandraPassword') }}"
@@ -334,6 +340,7 @@ helmi_config:
         supportUrl: ""
       chart: monostream/muescheli
       chart-version: 0.1.5
+      chart-offline: catalog/muescheli/muescheli-0.1.5.tgz
       chart-values:
         environment.no_proxy: "{{ lookup('env', 'no_proxy') }}"
         environment.http_proxy: "{{ lookup('env', 'http_proxy') }}"

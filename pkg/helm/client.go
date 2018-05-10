@@ -73,7 +73,7 @@ func (c *Client) ExistRelease(release string) (bool, error) {
 	return true, nil
 }
 
-func (c *Client) InstallRelease(release string, chartName string, version string, values map[string]string, namespace string, acceptsIncomplete bool) (*rspb.Release, error) {
+func (c *Client) InstallRelease(release string, chartName string, version string, chartOffline string, values map[string]string, namespace string, acceptsIncomplete bool) (*rspb.Release, error) {
 	displayValues := make(map[string]string)
 	for name, value := range values {
 		if strings.Contains(name, "Password") || strings.Contains(name, "password") {
@@ -101,7 +101,7 @@ func (c *Client) InstallRelease(release string, chartName string, version string
 		return nil, fmt.Errorf("convert values to yaml values cause an error: %s", err)
 	}
 
-	chart, err := getChart(c.config, c.env, chartName, version, c.logger)
+	chart, err := getChart(c.config, c.env, chartName, version, chartOffline,c.logger)
 
 	if err != nil {
 		return nil, fmt.Errorf("install release %s, cause an error: %s", chartName, err)

@@ -60,7 +60,7 @@ func Install(catalog *catalog.Catalog,
 		chartVersion = ""
 	}
 
-	_, err := client.InstallRelease(name, chart, chartVersion, chartValues, chartNamespace, acceptsIncomplete)
+	_, err := client.InstallRelease(name, chart, chartVersion, service.ChartOffline, chartValues, chartNamespace, acceptsIncomplete)
 
 	if err != nil {
 		logger.Error("failed-install-release", err, lager.Data{

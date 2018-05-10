@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-func getChart(config config.Config, envs environment.EnvSettings, chartName string, chartVersion string, logger lager.Logger) (*chart.Chart, error) {
+func getChart(config config.Config, envs environment.EnvSettings, chartName string, chartVersion string, chartOffline string, logger lager.Logger) (*chart.Chart, error) {
 	logger.Debug("get-chart", lager.Data{
 		"chart-name": chartName,
 		"chart-version": chartVersion,
@@ -26,22 +26,31 @@ func getChart(config config.Config, envs environment.EnvSettings, chartName stri
 		return nil, fmt.Errorf("get chart cause an error: %s", err)
 	}
 
-	repos, err := getRepos(config, envs, logger)
-	if err != nil {
-		return nil, err
+	exist, chartfile, err := findChartWithPath(chartName, chartVersion, chartOffline, envs, logger)
+	if exist {
+		helmChart, err := loadChart(chartfile, logger)
+		if err != nil {
+			return nil, err
+		}
+		return helmChart, nil
+	} else {
+		logger.Error("find-chart-from-local", err, lager.Data{
+			"start-download-chart-from-remote-repo": true,
+		})
+		repos, err := getRepos(config, envs, logger)
+		if err != nil {
+			return nil, err
+		}
+		chartFile, err := writeChart(config, envs, chartName, chartVersion, repos, logger)
+		if err != nil {
+			return nil, err
+		}
+		helmChart, err := loadChart(chartFile, logger)
+		if err != nil {
+			return nil, err
+		}
+		return helmChart, nil
 	}
-
-	chartFile, err := writeChart(config, envs, chartName, chartVersion, repos, logger)
-
-	if err != nil {
-		return nil, err
-	}
-
-	helmChart, err := loadChart(chartFile, logger)
-	if err != nil {
-		return nil, err
-	}
-	return helmChart, nil
 }
 
 func getRepos(config config.Config, envs environment.EnvSettings, logger lager.Logger) (map[string]string, error) {
@@ -114,6 +123,29 @@ func findChartWithUrl(chartName, chartVersion, repoUrl string, envs environment.
 	}
 }
 
+func findChartWithPath(chartName, chartVersion, chartfile string, envs environment.EnvSettings, logger lager.Logger) (bool, string, error) {
+	logger.Debug("find-local-chart", lager.Data{
+		"chart-name": chartName,
+		"chart-version": chartVersion,
+		"chart-file": chartfile,
+	})
+	var imagefile string
+	if chartfile == "" {
+		imagefile = fmt.Sprintf("%s/%s-%s.tgz", envs.Home.Archive(), parseChartName(chartName), chartVersion)
+	} else {
+		if (strings.Contains(chartfile, fmt.Sprintf("%s-%s.tgz", parseChartName(chartName), chartVersion))) {
+			imagefile = chartfile
+		} else {
+			imagefile = fmt.Sprintf("%s/%s-%s.tgz", envs.Home.Archive(), parseChartName(chartName), chartVersion)
+		}
+	}
+	_, err := os.Stat(imagefile)
+	if err != nil {
+		return false, "", err
+	}
+	return true, imagefile, nil
+}
+
 func downloadChart(url string, version string, envs environment.EnvSettings, logger lager.Logger) (string, error) {
 	logger.Debug("download-chart", lager.Data{
 		"chart-url": url,
@@ -151,4 +183,13 @@ func loadChart(filename string, logger lager.Logger) (*chart.Chart, error) {
 	}
 	logger.Debug("load-chart-success", lager.Data{"filename": filename})
 	return chartRequested, nil
+}
+
+func parseChartName(name string) string {
+	s := strings.Split(name, "/")
+	if len(s) == 1 {
+		return s[0]
+	} else {
+		return s[1]
+	}
 }
