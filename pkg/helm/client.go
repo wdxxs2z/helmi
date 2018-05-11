@@ -244,7 +244,7 @@ func (c *Client) readYamlProperties(node yaml.Node, prefix string) map[string]st
 
 			nodeName += mapKey
 
-			for key, value := range readYamlProperties(mapNode, nodeName) {
+			for key, value := range c.readYamlProperties(mapNode, nodeName) {
 				values[key] = value
 			}
 		}

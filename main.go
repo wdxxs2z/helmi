@@ -10,6 +10,7 @@ import (
 
 	"github.com/wdxxs2z/helmi/pkg/broker"
 	helmi "github.com/wdxxs2z/helmi/pkg/helm"
+	"github.com/wdxxs2z/helmi/pkg/catalog"
 )
 
 var (
@@ -51,6 +52,11 @@ func main() {
 
 	logger := buildLogger(config.LogLevel)
 
+	c, catalogErr := catalog.ParseDir(config.HelmiConfig.CatalogDir)
+	if catalogErr != nil {
+		log.Fatal(err)
+	}
+
 	os.Setenv("USERNAME", config.Username)
 	os.Setenv("PASSWORD", config.Password)
 
@@ -58,7 +64,7 @@ func main() {
 
 	helmClient := helmi.NewClient(config.HelmiConfig, logger)
 
-	helmibroker := broker.New(config.HelmiConfig, helmClient, logger)
+	helmibroker := broker.New(config.HelmiConfig, c, helmClient, logger)
 
 	helmibroker.Run(":" + port)
 }

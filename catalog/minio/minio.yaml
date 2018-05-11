@@ -1,0 +1,52 @@
+---
+service:
+  _id: 8dda5a6f-f796-4b52-806f-4129d7576d6e
+  _name: minio
+  description: "S3 Object Store as a Service"
+  bindable: true
+  plan_updatable: true
+  tags:
+  - minio
+  - private cloud storage
+  metadata:
+    displayName: "Kubernetes Helm Minio Service"
+    imageUrl: ""
+    longDescription: "Kubernetes Helm Minio Service"
+    providerDisplayName: "Kubernetes Helm Minio Service"
+    documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/minio"
+    supportUrl: "https://www.minio.io/"
+  chart: stable/minio
+  chart-version: 1.1.1
+  chart-offline: catalog/minio/minio-1.1.1.tgz
+  plans:
+  -
+    _id: f003f191-c250-4e85-9abd-038af629ad71
+    _name: free
+    description: "Free S3 Object Store Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
+      bullets:
+        - free s3 object store service
+    chart-values:
+      persistence.size: 8Gi
+      persistence.storageClass: local-storage
+---
+chart-values:
+  mode: "standalone"
+  accessKey: "AKIAIOSFODNN7EXAMPLE"
+  secretKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+---
+user-credentials:
+  uri: "http://{{ .Values.accessKey }}:{{ .Values.secretKey }}@{{ .Cluster.Address }}:{{ .Cluster.Port }}/"
+  endpoint: "{{ .Cluster.Address }}:{{ .Cluster.Port }}"
+  accessKey: "{{ .Values.accessKey }}"
+  secretKey: "{{ .Values.secretKey }}"
+  hostname: "{{ .Cluster.Address }}"
+  port: "{{ .Cluster.Port }}"
+  region: "us-west-1"
+  pathStyleAccess: true

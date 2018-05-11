@@ -1,0 +1,51 @@
+---
+service:
+  _id: b4280104-b578-4156-a69c-8961bcdfa8c0
+  _name: "mongodb"
+  description: "MongoDB as a Service"
+  bindable: true
+  plan_updatable: true
+  tags:
+  - mongodb
+  - nosql
+  metadata:
+    displayName: "Kubernetes Helm Mongodb Service"
+    imageUrl: "https://webassets.mongodb.com/_com_assets/global/mongodb-logo-white.png"
+    longDescription: "Kubernetes Helm Mongodb Service"
+    providerDisplayName: "Kubernetes Helm Mongodb Service"
+    documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/mongodb"
+    supportUrl: "https://www.mongodb.com/"
+  chart: stable/mongodb
+  chart-version: 2.0.1
+  chart-offline: catalog/mongodb/mongodb-2.0.1.tgz
+  plans:
+  -
+    _id: 905b1f0e-c815-41d4-b3e4-6ccb602b9e8e
+    _name: free
+    description: "Free MongoDB Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
+      bullets:
+        - Single node mongodb service
+    chart-values:
+      persistence.size: 8Gi
+      persistence.storageClass: local-storage
+---
+chart-values:
+  mongodbUsername: "{{ generateUsername }}"
+  mongodbPassword: "{{ generatePassword }}"
+  mongodbRootPassword:  "{{ generatePassword }}"
+  mongodbDatabase: db
+---
+user-credentials:
+  uri: "mongodb://{{ .Values.mongodbUsername }}:{{ .Values.mongodbPassword }}@{{ .Cluster.Address }}:{{ .Cluster.Port }}/{{ .Values.mongodbDatabase }}"
+  username: "{{ .Values.mongodbUsername }}"
+  password: "{{ .Values.mongodbPassword }}"
+  database: "{{ .Values.mongodbDatabase }}"
+  hostname: "{{ .Cluster.Address }}"
+  port: "{{ .Cluster.Port }}"

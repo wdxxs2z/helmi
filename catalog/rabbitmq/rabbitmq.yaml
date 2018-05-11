@@ -1,0 +1,51 @@
+---
+service:
+  _id: 2f1e7c63-0511-4209-aa7f-6bdee7ffb2b6
+  _name: "rabbitmq"
+  description: "RabbitMQ as a Service"
+  bindable: true
+  plan_updatable: true
+  tags:
+  - rabbitmq
+  - mq
+  metadata:
+    displayName: "Kubernetes Helm RabbitMQ Service"
+    imageUrl: ""
+    longDescription: "Kubernetes Helm RabbitMQ Service"
+    providerDisplayName: "Kubernetes Helm RabbitMQ Service"
+    documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/rabbitmq"
+    supportUrl: "https://mariadb.org/"
+  chart: stable/rabbitmq
+  chart-version: 0.7.5
+  chart-offline: catalog/rabbitmq/rabbitmq-0.7.5.tgz
+  plans:
+  -
+    _id: d2badac0-8e41-4588-a9fc-0e662c480610
+    _name: free
+    description: "Free RabbitMQ Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
+      bullets:
+        - Single node rabbitmq service
+    chart-values:
+      persistence.size: 8Gi
+      persistence.storageClass: local-storage
+---
+chart-values:
+  rbacEnabled: true
+  rabbitmq.username: "{{ generateUsername }}"
+  rabbitmq.password: "{{ generatePassword }}"
+---
+user-credentials:
+  uri: "amqp://{{ .Values.rabbitmq.username }}:{{ .Values.rabbitmq.password }}@{{ .Cluster.Address }}:{{ .Cluster.Port 5672 }}/"
+  username: "{{ .Values.rabbitmq.username }}"
+  password: "{{ .Values.rabbitmq.password }}"
+  hostname: "{{ .Cluster.Address }}"
+  port: "{{ .Cluster.Port 5672 }}"
+  vhost: ""
+  ssl: false

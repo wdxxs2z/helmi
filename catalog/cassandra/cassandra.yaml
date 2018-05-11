@@ -1,0 +1,69 @@
+---
+service:
+  _id: 201cb950-e640-4453-9d91-4708ea0a1342
+  _name: "cassandra"
+  description: "Cassandra as a Service"
+  bindable: true
+  plan_updatable: true
+  tags:
+  - cassandra
+  - nosql
+  metadata:
+    displayName: "Kubernetes Helm Cassandra Service"
+    imageUrl: ""
+    longDescription: "Kubernetes Helm Cassandra Service"
+    providerDisplayName: "Kubernetes Helm Cassandra Service"
+    documentationUrl: ""
+    supportUrl: ""
+  chart: monostream/cassandra
+  chart-version: 0.2.8
+  chart-offline: catalog/cassandra/cassandra-0.2.8.tgz
+  plans:
+  -
+    _id: 169d5466-12c9-4a89-a063-f72048b3d4c4
+    _name: free
+    description: "Free 3 Node Cassandra Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
+      bullets:
+        - cassandra service
+    chart-values:
+      persistence.size: 8Gi
+      persistence.storageClass: local-storage
+  -
+    _id: 7b16d6aa-260a-4b8d-b12c-464d2cedb9d0
+    _name: dev
+    description: "Single Node Development Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
+      bullets:
+        - cassandra service
+    chart-values:
+      persistence.size: 8Gi
+      persistence.storageClass: local-storage
+      replicaCount: 1
+      replicaMinAvailable: 0
+---
+chart-values:
+  cassandraUsername: "{{ generateUsername }}"
+  cassandraPassword: "{{ generatePassword }}"
+---
+user-credentials:
+  jdbcUrl: "jdbc:cassandra://{{ .Values.cassandraUsername }}:{{ .Values.cassandraPassword }}@{{ .Cluster.Address }}:{{ .Cluster.Port 9042 }}"
+  uri: "cassandra://{{ .Values.cassandraUsername }}:{{ .Cluster.Address }}:{{ .Cluster.Port 9042 }}"
+  node_ips:
+  - "{{ .Cluster.Address }}"
+  cql_port: "{{ .Cluster.Port 9042 }}"
+  thrift_port: "{{ .Cluster.Port 9160 }}"
+  username: "{{ .Values.cassandraUsername }}"
+  password: "{{ .Values.cassandraPassword }}"

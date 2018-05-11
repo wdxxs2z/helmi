@@ -105,7 +105,7 @@ func Test_GetChart(t *testing.T) {
 }
 
 func Test_GetChartValues(t *testing.T) {
-	values := getChartValues(cs, csp)
+	values, _ := getChartValues(cs, csp, nil)
 
 	if values["foo"] != "bar" {
 		t.Error(red("incorrect helm value returned"))

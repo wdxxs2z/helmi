@@ -46,13 +46,13 @@ type CatalogExternal struct {
 	Services []brokerapi.Service `json:"services"`
 }
 
-func New(config config.Config, client *helmi.Client, logger lager.Logger) *HelmBroker {
+func New(config config.Config, catalog catalog.Catalog, client *helmi.Client, logger lager.Logger) *HelmBroker {
 	brokerRouter := mux.NewRouter()
 	broker := &HelmBroker{
 		allowUserProvisionParameters: 	config.AllowUserProvisionParameters,
 		allowUserUpdateParameters:      config.AllowUserUpdateParameters,
 		allowUserBindParameters:        config.AllowUserBindParameters,
-		catalog:			config.Catalog,
+		catalog:			catalog,
 		logger:				logger.Session("service-broker"),
 		brokerRouter:			brokerRouter,
 		helmClient:                     client,
@@ -83,19 +83,53 @@ func (b *HelmBroker) Run(address string) {
 
 func (b *HelmBroker) Services(context context.Context) ([]brokerapi.Service, error) {
 	b.logger.Debug(helmicons.FetchServiceCatalog, lager.Data{})
-	brokerCatalog, err := json.Marshal(b.catalog)
-	if err != nil {
-		b.logger.Error("encode-catalog-err", err)
-		return []brokerapi.Service{}, err
-	}
 
-	servicesCatalog := CatalogExternal{}
-	if err = json.Unmarshal(brokerCatalog, &servicesCatalog); err != nil {
-		b.logger.Error("decode-catalog-err", err)
-		return []brokerapi.Service{}, err
-	}
+	services := make([]brokerapi.Service, 0, len(b.catalog.Services))
+	for _, service := range b.catalog.Services {
+		servicePlans := make([]brokerapi.ServicePlan, 0, len(service.Plans))
+		for _, plan := range service.Plans {
 
-	return servicesCatalog.Services, nil
+			planCosts := make([]brokerapi.ServicePlanCost, 0 , len(plan.Metadata.Costs))
+			for _, cost := range plan.Metadata.Costs {
+				c := brokerapi.ServicePlanCost{
+					Amount:    cost.Amount,
+					Unit:      cost.Unit,
+				}
+				planCosts = append(planCosts, c)
+			}
+			p := brokerapi.ServicePlan{
+				ID:		plan.Id,
+				Name:           plan.Name,
+				Description:    plan.Description,
+				Free:           plan.Free,
+				Bindable:       plan.Bindable,
+				Metadata:       &brokerapi.ServicePlanMetadata{
+					Bullets: plan.Metadata.Bullets,
+					Costs:   planCosts,
+				},
+			}
+			servicePlans = append(servicePlans, p)
+		}
+		s:= brokerapi.Service{
+			ID:		 service.Id,
+			Name:            service.Name,
+			Description:     service.Description,
+			Bindable:        service.Bindable,
+			Tags:            service.Tags,
+			PlanUpdatable:   service.PlanUpdateable,
+			Metadata:        &brokerapi.ServiceMetadata{
+				DisplayName:		service.Metadata.DisplayName,
+				ImageUrl: 		service.Metadata.ImageUrl,
+				SupportUrl:             service.Metadata.SupportUrl,
+				ProviderDisplayName:    service.Metadata.ProviderDisplayName,
+				DocumentationUrl:       service.Metadata.DocumentationUrl,
+				LongDescription:        service.Metadata.LongDescription,
+			},
+			Plans:           servicePlans,
+		}
+		services = append(services, s)
+	}
+	return services, nil
 }
 
 func (b *HelmBroker) Provision(context context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (brokerapi.ProvisionedServiceSpec, error){

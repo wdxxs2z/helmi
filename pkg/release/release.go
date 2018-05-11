@@ -2,18 +2,12 @@ package release
 
 import (
 	"errors"
-	"regexp"
 	"strings"
-	"strconv"
-	"github.com/satori/go.uuid"
 	helmi "github.com/wdxxs2z/helmi/pkg/helm"
 	"github.com/wdxxs2z/helmi/pkg/kubectl"
 	"github.com/wdxxs2z/helmi/pkg/catalog"
 	helmicons "github.com/wdxxs2z/helmi/pkg/constants"
 	"code.cloudfoundry.org/lager"
-	"os"
-	"reflect"
-	"fmt"
 )
 
 type Status struct {
@@ -43,7 +37,7 @@ func Install(catalog *catalog.Catalog,
 
 	chart, chartErr := getChart(service, plan)
 	chartVersion, chartVersionErr := getChartVersion(service, plan)
-	chartValues := getChartValues(service, plan, parameters)
+	chartValues, chartValuesErr := getChartValues(service, plan, parameters)
 	chartNamespace := getChartNamespace(context, parameters)
 
 	if chartErr != nil {
@@ -58,6 +52,15 @@ func Install(catalog *catalog.Catalog,
 
 	if chartVersionErr != nil {
 		chartVersion = ""
+	}
+
+	if chartValuesErr != nil {
+		logger.Error("failed-parse-chart-values", chartValuesErr, lager.Data{
+			"id": id,
+			"name": name,
+			"service-id": serviceId,
+			"plan-id": planId,
+		})
 	}
 
 	_, err := client.InstallRelease(name, chart, chartVersion, service.ChartOffline, chartValues, chartNamespace, acceptsIncomplete)
@@ -182,8 +185,6 @@ func GetCredentials(catalog *catalog.Catalog, serviceId string, planId string, i
 
 	status, err := client.GetStatus(name)
 
-	fmt.Println(status)
-
 	if err != nil {
 		exists, existsErr := client.ExistRelease(name)
 
@@ -222,7 +223,13 @@ func GetCredentials(catalog *catalog.Catalog, serviceId string, planId string, i
 		return nil, err
 	}
 
-	credentials := getUserCredentials(service, plan, nodes, status, values)
+	credentials, err := service.UserCredentials(&plan, nodes, status, values)
+	if err != nil {
+		logger.Error("failed-get-usercredentials", err, lager.Data{
+			"id": id,
+			"name": name,
+		})
+	}
 
 	logger.Info("sending-release-credentials", lager.Data{
 		"id": id,
@@ -245,7 +252,7 @@ func getName(value string) string {
 	return prefix + name[:14]
 }
 
-func getChart(service catalog.CatalogService, plan catalog.CatalogPlan) (string, error) {
+func getChart(service catalog.Service, plan catalog.Plan) (string, error) {
 	if len(plan.Chart) > 0 {
 		return plan.Chart, nil
 	}
@@ -257,7 +264,7 @@ func getChart(service catalog.CatalogService, plan catalog.CatalogPlan) (string,
 	return "", errors.New("no helm chart specified")
 }
 
-func getChartVersion(service catalog.CatalogService, plan catalog.CatalogPlan) (string, error) {
+func getChartVersion(service catalog.Service, plan catalog.Plan) (string, error) {
 	if len(plan.ChartVersion) > 0 {
 		return plan.ChartVersion, nil
 	}
@@ -284,15 +291,15 @@ func getChartNamespace(context map[string]string, parameters map[string]string) 
 	return ""
 }
 
-func getChartValues(service catalog.CatalogService, plan catalog.CatalogPlan, parameters map[string]string) map[string]string {
-	values := map[string]string{}
+func getChartValues(service catalog.Service, plan catalog.Plan, parameters map[string]string) (map[string]string, error) {
 	templates := map[string]string{}
 
-	for key, value := range service.ChartValues {
-		templates[key] = value
+	chartValues , err := service.ChartValues(&plan)
+	if err != nil {
+		return nil, err
 	}
 
-	for key, value := range plan.ChartValues {
+	for key, value := range chartValues {
 		templates[key] = value
 	}
 
@@ -300,240 +307,5 @@ func getChartValues(service catalog.CatalogService, plan catalog.CatalogPlan, pa
 		templates[key] = value
 	}
 
-	usernames := map[string]string{}
-	passwords := map[string]string{}
-
-	r := regexp.MustCompile(helmicons.LookupRegex)
-	groupNames := r.SubexpNames()
-
-	for key, template := range templates {
-		value := r.ReplaceAllStringFunc(template, func(m string) string {
-			var lookupType string
-			var lookupPath string
-
-			for groupKey, groupValue := range r.FindStringSubmatch(m) {
-				groupName := groupNames[groupKey]
-
-				if strings.EqualFold(groupName, helmicons.LookupRegexType) {
-					lookupType = groupValue
-				}
-
-				if strings.EqualFold(groupName, helmicons.LookupRegexPath) {
-					lookupPath = groupValue
-				}
-			}
-
-			if strings.EqualFold(lookupType, helmicons.LookupUsername) {
-				username := usernames[lookupPath]
-
-				if len(username) == 0 {
-					username = uuid.NewV4().String()
-					username = strings.Replace(username, "-", "", -1)
-					usernames[lookupPath] = username
-				}
-
-				return username
-			}
-
-			if strings.EqualFold(lookupType, helmicons.LookupPassword) {
-				password := passwords[lookupPath]
-
-				if len(password) == 0 {
-					password = uuid.NewV4().String()
-					password = strings.Replace(password, "-", "", -1)
-					passwords[lookupPath] = password
-				}
-
-				return password
-			}
-
-			if strings.EqualFold(lookupType, helmicons.LookupEnv) {
-				env, _ := os.LookupEnv(lookupPath)
-				return env
-			}
-
-			return ""
-		})
-
-		if len(value) > 0 {
-			values[key] = value
-		}
-	}
-
-	return values
-}
-
-func getUserCredentials(service catalog.CatalogService, plan catalog.CatalogPlan, kubernetesNodes [] kubectl.Node, helmStatus helmi.Status, helmValues map[string]string) map[string]interface{} {
-	values := map[string]interface{}{}
-	templates := map[string]interface{}{}
-
-	for key, value := range service.UserCredentials {
-		templates[key] = value
-	}
-
-	for key, value := range plan.UserCredentials {
-		templates[key] = value
-	}
-
-	r := regexp.MustCompile(helmicons.LookupRegex)
-	groupNames := r.SubexpNames()
-
-	replaceTemplate := func(template string) string {
-		var lookupType string
-		var lookupPath string
-
-		for groupKey, groupValue := range r.FindStringSubmatch(template) {
-			groupName := groupNames[groupKey]
-
-			if strings.EqualFold(groupName, helmicons.LookupRegexType) {
-				lookupType = groupValue
-			}
-
-			if strings.EqualFold(groupName, helmicons.LookupRegexPath) {
-				lookupPath = groupValue
-			}
-		}
-
-		if strings.EqualFold(lookupType, helmicons.LookupRelease) {
-			if strings.EqualFold(lookupPath, "name") {
-				return helmStatus.Name
-			}
-			if strings.EqualFold(lookupPath, "namespace") {
-				return helmStatus.Namespace
-			}
-		}
-
-		if strings.EqualFold(lookupType, helmicons.LookupUsername) {
-			username := helmValues[lookupPath]
-			return username
-		}
-
-		if strings.EqualFold(lookupType, helmicons.LookupPassword) {
-			password := helmValues[lookupPath]
-			return password
-		}
-
-		if strings.EqualFold(lookupType,helmicons.LookupValue) {
-			value := helmValues[lookupPath]
-			return value
-		}
-
-		if strings.EqualFold(lookupType, helmicons.LookupCluster) {
-			if strings.HasPrefix(strings.ToLower(lookupPath), "port") {
-				portParts := strings.Split(lookupPath, ":")
-
-				if len(helmStatus.IngressPorts) > 0 {
-					return strconv.Itoa(helmStatus.IngressPorts[0])
-				}
-
-				for clusterPort, nodePort := range helmStatus.NodePorts {
-					if len(portParts) == 1 || strings.EqualFold(strconv.Itoa(clusterPort), portParts[1]) {
-						return strconv.Itoa(nodePort)
-					}
-				}
-
-				for containerPort, clusterPort := range  helmStatus.ClusterPorts {
-					if len(portParts) == 1 || strings.EqualFold(strconv.Itoa(containerPort), portParts[1]) {
-						return strconv.Itoa(clusterPort)
-					}
-				}
-
-				return portParts[1]
-			}
-
-			// single host
-
-			if strings.EqualFold(lookupPath, "address") {
-				// return dns name if set as environment variable
-				if value, ok := os.LookupEnv("DOMAIN"); ok {
-					return value
-				}
-
-				if len(helmStatus.IngressHosts) > 0 {
-					return helmStatus.IngressHosts[0]
-				}
-
-				if helmStatus.ServiceType == "ClusterIP" {
-					if value, ok := os.LookupEnv("CLUSTER_DNS"); ok {
-						return fmt.Sprintf("%s-%s.%s.%s", helmStatus.Name, service.Name, helmStatus.Namespace, value)
-					}
-
-				} else if helmStatus.ServiceType == "NodePort" {
-					for _, node := range kubernetesNodes {
-						if len(node.ExternalIP) > 0 {
-							return node.ExternalIP
-						}
-					}
-					for _, node := range kubernetesNodes {
-						if len(node.InternalIP) > 0 {
-							return node.InternalIP
-						}
-					}
-				} else if helmStatus.ServiceType == "LoadBalancer" {
-					//TODO
-				} else if helmStatus.ServiceType == "ExternalName" {
-					//TODO
-				}
-			}
-
-			if strings.EqualFold(lookupPath, "hostname") {
-				for _, node := range kubernetesNodes {
-					if len(node.Hostname) > 0 {
-						return node.Hostname
-					}
-				}
-			}
-		}
-
-		return ""
-	}
-
-	for key, templateInterface := range templates {
-		// string
-		templateString, ok := reflect.ValueOf(templateInterface).Interface().(string)
-
-		if ok {
-			value := r.ReplaceAllStringFunc(templateString, replaceTemplate)
-
-			if len(value) > 0 {
-				values[key] = value
-			}
-
-			continue
-		}
-
-		// string array
-		templateStringArray, ok := reflect.ValueOf(templateInterface).Interface().([]interface{})
-
-		if ok {
-			valueArray := []string{}
-
-			for _, templateValue := range templateStringArray {
-				templateString, ok := reflect.ValueOf(templateValue).Interface().(string)
-
-				if ok {
-					value := r.ReplaceAllStringFunc(templateString, replaceTemplate)
-
-					if len(value) > 0 {
-						valueArray = append(valueArray, value)
-					}
-				}
-			}
-
-			if len(valueArray) > 0 {
-				values[key] = valueArray
-			}
-
-			continue
-		}
-	}
-
-	return values
-}
-
-func substring(s, begin, last string)  string {
-	start := strings.Index(s, begin)
-	end := strings.LastIndex(s, last)
-	rs := strings.Replace(s, s[start:end + 1], "", -1)
-	return rs
+	return templates, nil
 }

@@ -1,0 +1,46 @@
+---
+service:
+  _id: c26e6c7a-fe17-4568-ac4c-46545ab1d178
+  _name: "redis"
+  description: "Redis as a Service"
+  bindable: true
+  plan_updatable: true
+  tags:
+  - redis
+  - key value database
+  metadata:
+    displayName: "Kubernetes Helm Redis Service"
+    imageUrl: "https://redis.io/images/redis-white.png"
+    longDescription: "Kubernetes Helm Redis Service"
+    providerDisplayName: "Kubernetes Helm Redis Service"
+    documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/redis"
+    supportUrl: "https://redis.io/"
+  chart: stable/redis
+  chart-version: 3.0.2
+  chart-offline: catalog/redis/redis-3.0.2.tgz
+  plans:
+  -
+    _id: 381c8dd1-676b-4d1f-ae00-97e8304f966f
+    _name: free
+    description: "Free Redis Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
+      bullets:
+        - Single node redis service
+    chart-values:
+      master.persistence.size: 8Gi
+      master.persistence.storageClass: local-storage
+---
+chart-values:
+  password: "{{ generatePassword }}"
+---
+user-credentials:
+  uri: "redis://:{{ .Values.password }}@{{ .Cluster.Address }}:{{ .Cluster.Port }}"
+  password: "{{ .Values.password }}"
+  hostname: "{{ .Cluster.Address }}"
+  port: "{{ .Cluster.Port }}"

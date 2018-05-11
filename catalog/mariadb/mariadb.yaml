@@ -1,0 +1,54 @@
+---
+service:
+  _id: ab53df4d-c279-4880-94f7-65e7d72b7834
+  _name: mariadb
+  description: "MariaDB as a Service"
+  bindable: true
+  plan_updatable: true
+  tags:
+  - mysql
+  - mariadb
+  metadata:
+    displayName: "Kubernetes Helm Mariadb Service"
+    imageUrl: "https://mariadb.org/wp-content/uploads/2015/05/MariaDB-Foundation-horizontal-x52.png"
+    longDescription: "Kubernetes Helm Mariadb Service"
+    providerDisplayName: "Kubernetes Helm Mariadb Service"
+    documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/mariadb"
+    supportUrl: "https://mariadb.org/"
+  chart: stable/mariadb
+  chart-version: 1.0.7
+  chart-offline: catalog/mariadb/mariadb-1.0.7.tgz
+  plans:
+  -
+    _id: e79306ef-4e10-4e3d-b38e-ffce88c90f59
+    _name: free
+    description: "Free MariaDB Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+        - amount:
+            usd: 0.1
+          unit: MONTHLY
+      bullets:
+        - Single node mariadb service
+    chart-values:
+        persistence.enabled: false
+        persistence.size: 8Gi
+        persistence.storageClass: local-storage
+        serviceType: ClusterIP
+---
+chart-values:
+  mariadbUser: "{{ generateUsername }}"
+  mariadbPassword: "{{ generatePassword }}"
+  mariadbRootPassword: "{{ generatePassword }}"
+  mariadbDatabase: db
+---
+user-credentials:
+  uri: "mysql://{{ .Values.mariadbUser }}:{{ .Values.mariadbPassword }}@{{ .Cluster.Address }}:{{ .Cluster.Port }}/{{ .Values.mariadbDatabase }}"
+  jdbcUrl: "jdbc:mysql://{{ .Values.mariadbUser }}:{{ .Values.mariadbPassword }}@{{ .Cluster.Address }}:{{ .Cluster.Port }}/{{ .Values.mariadbDatabase }}?user={{ .Values.mariadbUser }}\u0026password={{ .Values.mariadbPassword }}"
+  username: "{{ .Values.mariadbUser }}"
+  password: "{{ .Values.mariadbPassword }}"
+  database: "{{ .Values.mariadbDatabase }}"
+  hostname: "{{ .Cluster.Address }}"
+  port: "{{ .Cluster.Port }}"

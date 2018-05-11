@@ -5,13 +5,24 @@ import (
 	"strings"
 	"gopkg.in/yaml.v2"
 	"fmt"
+	"path/filepath"
+	"os"
+	"io/ioutil"
+	"bytes"
+	"text/template"
+	"github.com/Masterminds/sprig"
+	"github.com/satori/go.uuid"
+	"strconv"
+
+	helmi "github.com/wdxxs2z/helmi/pkg/helm"
+	"github.com/wdxxs2z/helmi/pkg/kubectl"
 )
 
 type Catalog struct {
-	Services []CatalogService `yaml:"services"`
+	Services map[string]Service
 }
 
-type CatalogService struct {
+type Service struct {
 	Id          		string 			`yaml:"_id"`
 	Name        		string 			`yaml:"_name"`
 	Description 		string 			`yaml:"description"`
@@ -19,27 +30,36 @@ type CatalogService struct {
 	Tags        	 	[]string		`yaml:"tags"`
 	Requires    	 	[]string		`yaml:"requires"`
 	Bindable    	 	bool			`yaml:"bindable"`
-	Metadata    	 	map[string]string	`yaml:"metadata"`
+	Metadata    	 	ServiceMetadata		`yaml:"metadata"`
 	DashboardClient  	map[string]string	`yaml:"dashboard_client"`
 	PlanUpdateable   	bool			`yaml:"plan_updateable"`
 
 	Chart        		string            	`yaml:"chart"`
 	ChartVersion 		string            	`yaml:"chart-version"`
 	ChartOffline            string                  `yaml:"chart-offline"`
-	ChartValues  		map[string]string 	`yaml:"chart-values"`
 
-	UserCredentials 	map[string]interface{} `yaml:"user-credentials"`
+	Plans 			[]Plan 			`yaml:"plans"`
 
-	Plans 			[]CatalogPlan 		`yaml:"plans"`
+	valuesTemplate      	*template.Template
+	credentialsTemplate 	*template.Template
 }
 
-type CatalogPlan struct {
+type ServiceMetadata struct {
+	DisplayName         string 	`yaml:"displayName"`
+	ImageUrl            string 	`yaml:"imageUrl"`
+	LongDescription     string 	`yaml:"longDescription"`
+	ProviderDisplayName string 	`yaml:"providerDisplayName"`
+	DocumentationUrl    string 	`yaml:"documentationUrl"`
+	SupportUrl          string 	`yaml:"supportUrl"`
+}
+
+type Plan struct {
 	Id          		string 			`yaml:"_id"`
 	Name        		string 			`yaml:"_name"`
 	Description 		string 			`yaml:"description"`
 
-	Free        		bool 			`yaml:"free"`
-	Bindable    		bool			`yaml:"bindable"`
+	Free        		*bool 			`yaml:"free"`
+	Bindable    		*bool			`yaml:"bindable"`
 	Metadata    		PlanMetadata		`yaml:"metadata"`
 
 	Chart        		string            	`yaml:"chart"`
@@ -56,13 +76,13 @@ type PlanMetadata struct {
 
 
 type Cost struct {
-	Amount    		map[string]interface{}	`yaml:"amount"`
+	Amount    		map[string]float64	`yaml:"amount"`
 	Unit      		string			`yaml:"unit"`
 }
 
 func (c Catalog) Validate() error {
-	for _, service := range c.Services {
-		if err := service.Validate(); err != nil {
+	for _, s := range c.Services {
+		if err := s.Validate(); err != nil {
 			return fmt.Errorf("Validating Services configuration: %s", err)
 		}
 	}
@@ -70,7 +90,7 @@ func (c Catalog) Validate() error {
 	return nil
 }
 
-func (s CatalogService) Validate() error {
+func (s Service) Validate() error {
 	if s.Id == "" {
 		return fmt.Errorf("Must provide a non-empty Id (%+v)", s)
 	}
@@ -92,7 +112,7 @@ func (s CatalogService) Validate() error {
 	return nil
 }
 
-func (sp CatalogPlan) Validate() error {
+func (sp Plan) Validate() error {
 	if sp.Id == "" {
 		return fmt.Errorf("Must provide a non-empty ID (%+v)", sp)
 	}
@@ -117,17 +137,92 @@ func (c *Catalog) Parse(rawData []byte) {
 	}
 }
 
-func (c *Catalog) GetService(service string) (CatalogService, error) {
+func ParseDir(dir string) (Catalog, error) {
+	catalog := Catalog{
+		Services: make(map[string]Service),
+	}
+
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Printf("Unable to read catalog file: %q: %s", path, err)
+			return nil
+		}
+		ext := filepath.Ext(path)
+		if info.IsDir() || ( ext != ".yaml" && ext != ".yml" ) {
+			return nil
+		}
+		input, ioErr := ioutil.ReadFile(path)
+		if ioErr != nil {
+			return ioErr
+		}
+		return catalog.parseServiceDefinition(input, path)
+	})
+
+	if err != nil {
+		return catalog, err
+	}
+
+	if len(catalog.Services) == 0 {
+		err = fmt.Errorf("no services found in catalog directory: %s", dir)
+		return catalog, err
+	}
+
+	return catalog, nil
+}
+
+func (c *Catalog) parseServiceDefinition(input []byte, file string) error {
+	documents := bytes.Split(input, []byte("\n---"))
+	if n := len(documents); n != 3 {
+		return fmt.Errorf("service file %s: must contain 3 yaml document parts, found %d", file, n)
+	}
+	var s struct{ Service }
+	err := yaml.Unmarshal(documents[0], &s)
+	if err != nil {
+		return fmt.Errorf("failed to parse service definition: %s: %s", file, err)
+	}
+	fMap := templateFuncMap()
+	valuesTemplate, valuesErr := template.New("values").Funcs(fMap).Parse(string(documents[1]))
+	if valuesErr != nil {
+		return fmt.Errorf("failed to parse values template: %s: %s", file, valuesErr)
+	}
+	credentialsTemplate, credentialsErr := template.New("credentials").Funcs(fMap).Parse(string(documents[2]))
+	if credentialsErr != nil {
+		return fmt.Errorf("failed to parse credentials template: %s: %s", file, credentialsErr)
+	}
+
+	s.valuesTemplate = valuesTemplate
+	s.credentialsTemplate = credentialsTemplate
+
+	c.Services[s.Id] = s.Service
+	return nil
+}
+
+func templateFuncMap() template.FuncMap {
+	f := sprig.TxtFuncMap()
+
+	randomUuid := func() string {
+		s := uuid.NewV4().String()
+		s = strings.Replace(s, "-", "", -1)
+		return s
+	}
+
+	f["generateUsername"] = randomUuid
+	f["generatePassword"] = randomUuid
+
+	return f
+}
+
+func (c *Catalog) GetService(service string) (Service, error) {
 	for _, s := range c.Services {
 		if strings.EqualFold(s.Id, service) {
 			return s, nil
 		}
 	}
 
-	return *new(CatalogService), nil
+	return *new(Service), nil
 }
 
-func (c *Catalog) GetServicePlan(service string, plan string) (CatalogPlan, error) {
+func (c *Catalog) GetServicePlan(service string, plan string) (Plan, error) {
 	for _, s := range c.Services {
 		if strings.EqualFold(s.Id, service) {
 			for _, p := range s.Plans {
@@ -138,5 +233,164 @@ func (c *Catalog) GetServicePlan(service string, plan string) (CatalogPlan, erro
 		}
 	}
 
-	return *new(CatalogPlan), nil
+	return *new(Plan), nil
+}
+
+type chartValueVars struct {
+	*Service
+	*Plan
+}
+
+func (s *Service) ChartValues(p *Plan) (map[string]string, error) {
+	b := new(bytes.Buffer)
+	data := chartValueVars{s, p}
+	err := s.valuesTemplate.Execute(b, data)
+	if err != nil {
+		return nil, err
+	}
+
+	var v struct {
+		ChartValues map[string]string `yaml:"chart-values"`
+	}
+
+
+	err = yaml.Unmarshal(b.Bytes(), &v)
+	if err != nil {
+		return nil, err
+	}
+
+	if v.ChartValues == nil {
+		v.ChartValues = make(map[string]string)
+	}
+
+	for key, value := range p.ChartValues {
+		v.ChartValues[key] = value
+	}
+
+	return v.ChartValues, nil
+}
+
+type credentialVars struct {
+	Service *Service
+	Plan    *Plan
+	Values  valueVars
+	Release releaseVars
+	Cluster clusterVars
+}
+
+type valueVars map[string]string
+
+type releaseVars struct {
+	Name      string
+	Namespace string
+}
+
+type clusterVars struct {
+	Address    	string
+	Hostname   	string
+	helmStatus 	helmi.Status
+}
+
+func (c clusterVars) Port(port ...int) string {
+	if len(c.helmStatus.IngressPorts) > 0 {
+		return strconv.Itoa(c.helmStatus.IngressPorts[0])
+	}
+
+	for clusterPort, nodePort := range c.helmStatus.NodePorts {
+		if len(port) == 0 || port[0] == clusterPort {
+			return strconv.Itoa(nodePort)
+		}
+	}
+
+	for clusterPort, nodePort := range c.helmStatus.ClusterPorts {
+		if len(port) == 0 || port[0] == clusterPort {
+			return strconv.Itoa(nodePort)
+		}
+	}
+
+	if len(port) > 0 {
+		return strconv.Itoa(port[0])
+	}
+
+	return ""
+}
+
+func extractAddress(kubernetesNodes []kubectl.Node, helmStatus helmi.Status, serviceName string) string {
+	// return dns name if set as environment variable
+	if value, ok := os.LookupEnv("DOMAIN"); ok {
+		return value
+	}
+
+	if len(helmStatus.IngressHosts) > 0 {
+		return helmStatus.IngressHosts[0]
+	}
+
+	if helmStatus.ServiceType == "ClusterIP" {
+		if value, ok := os.LookupEnv("CLUSTER_DNS"); ok {
+			return fmt.Sprintf("%s-%s.%s.%s", helmStatus.Name, serviceName, helmStatus.Namespace, value)
+		}
+
+	} else if helmStatus.ServiceType == "NodePort" {
+		for _, node := range kubernetesNodes {
+			if len(node.ExternalIP) > 0 {
+				return node.ExternalIP
+			}
+		}
+		for _, node := range kubernetesNodes {
+			if len(node.InternalIP) > 0 {
+				return node.InternalIP
+			}
+		}
+	} else if helmStatus.ServiceType == "LoadBalancer" {
+		//TODO
+		return ""
+	} else if helmStatus.ServiceType == "ExternalName" {
+		//TODO
+		return ""
+	}
+
+	return ""
+}
+
+func extractHostname(kubernetesNodes []kubectl.Node) string {
+	for _, node := range kubernetesNodes {
+		if len(node.Hostname) > 0 {
+			return node.Hostname
+		}
+	}
+
+	return ""
+}
+
+func (s *Service) UserCredentials(plan *Plan, kubernetesNodes []kubectl.Node, helmStatus helmi.Status, values map[string]string) (map[string]interface{}, error) {
+	env := credentialVars{
+		Service: s,
+		Plan:    plan,
+		Values:  values,
+		Release: releaseVars{
+			Name:      helmStatus.Name,
+			Namespace: helmStatus.Namespace,
+		},
+		Cluster: clusterVars{
+			Address:    extractAddress(kubernetesNodes, helmStatus, s.Name),
+			Hostname:   extractHostname(kubernetesNodes),
+			helmStatus: helmStatus,
+		},
+	}
+
+	b := new(bytes.Buffer)
+	err := s.credentialsTemplate.Execute(b, env)
+	if err != nil {
+		return nil, err
+	}
+
+	var v struct {
+		UserCredentials map[string]interface{} `yaml:"user-credentials"`
+	}
+	err = yaml.Unmarshal(b.Bytes(), &v)
+	if err != nil {
+		return nil, err
+	}
+
+	return v.UserCredentials, nil
 }
