@@ -15,6 +15,7 @@ WORKDIR /app/
 RUN cp /go/src/github.com/wdxxs2z/helmi/helmi .
 RUN cp /go/src/github.com/wdxxs2z/helmi/kubeversion .
 RUN cp /go/src/github.com/wdxxs2z/helmi/catalog.yaml .
+RUN cp -a /go/src/github.com/wdxxs2z/helmi/catalog .
 RUN rm -r /go/src/
 
 # Download dumb-init 1.2.1

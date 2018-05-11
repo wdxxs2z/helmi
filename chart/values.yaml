@@ -58,25 +58,4 @@ service_config:
   allow_user_update_parameters: true
   allow_user_bind_parameters: true
   cluster_dns_name: svc.cluster.local
-  services:
-    mariadb:
-      chart: stable/mariadb
-      chart_version: 1.0.7
-    minio:
-      chart: stable/minio
-      chart_version: 0.3.0
-    rabbitmq:
-      chart: stable/rabbitmq
-      chart_version: 0.6.8
-    mongodb:
-      chart: stable/mongodb
-      chart_version: 0.4.9
-    redis:
-      chart: stable/redis
-      chart_version: 0.9.0
-    cassandra:
-      chart: monostream/cassandra
-      chart_version: 0.2.7
-    muescheli:
-      chart: monostream/muescheli
-      chart_version: 0.1.5
+  catalog_dir: catalog
