@@ -39,8 +39,9 @@ func NewClient (config config.Config, logger lager.Logger) *Client {
 	}
 	err = initRepos(helmEnv, sessionLogger, config)
 	if err != nil {
-		sessionLogger.Error("init-helm-repo", err, lager.Data{})
-		return nil
+		sessionLogger.Error("init-helm-repo", err, lager.Data{
+			"warn-info": "if your under offline mode, please make sure your catalog dir exist all service packages.",
+		})
 	}
 	helmClient, err := getHelmClient(config)
 	if err != nil {
