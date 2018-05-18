@@ -16,13 +16,13 @@ service:
     documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/mongodb"
     supportUrl: "https://www.mongodb.com/"
   chart: stable/mongodb
-  chart-version: 2.0.1
-  chart-offline: catalog/mongodb/mongodb-2.0.1.tgz
+  chart-version: 2.0.5
+  chart-offline: catalog/mongodb/mongodb-2.0.5.tgz
   plans:
   -
     _id: 905b1f0e-c815-41d4-b3e4-6ccb602b9e8e
-    _name: free
-    description: "Free MongoDB Instance"
+    _name: standard-alone
+    description: "Free One MongoDB Instance"
     bindable: true
     free: true
     metadata:
@@ -33,8 +33,10 @@ service:
       bullets:
         - Single node mongodb service
     chart-values:
-      persistence.size: 8Gi
-      persistence.storageClass: local-storage
+      persistence.enabled: false
+      service.type: ClusterIP
+      #persistence.size: 8Gi
+      #persistence.storageClass: local-storage
 ---
 chart-values:
   mongodbUsername: "{{ generateUsername }}"

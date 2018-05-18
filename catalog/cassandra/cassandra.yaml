@@ -21,7 +21,7 @@ service:
   plans:
   -
     _id: 169d5466-12c9-4a89-a063-f72048b3d4c4
-    _name: free
+    _name: standard-cluster
     description: "Free 3 Node Cassandra Instance"
     bindable: true
     free: true
@@ -31,13 +31,14 @@ service:
             usd: 0.0
           unit: MONTHLY
       bullets:
-        - cassandra service
+        - cassandra cluster service
     chart-values:
+      persistence.enabled: false
       persistence.size: 8Gi
       persistence.storageClass: local-storage
   -
     _id: 7b16d6aa-260a-4b8d-b12c-464d2cedb9d0
-    _name: dev
+    _name: standard-alone
     description: "Single Node Development Instance"
     bindable: true
     free: true
@@ -47,7 +48,7 @@ service:
             usd: 0.0
           unit: MONTHLY
       bullets:
-        - cassandra service
+        - cassandra one node service instance
     chart-values:
       persistence.size: 8Gi
       persistence.storageClass: local-storage

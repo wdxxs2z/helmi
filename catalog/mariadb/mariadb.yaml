@@ -16,39 +16,60 @@ service:
     documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/mariadb"
     supportUrl: "https://mariadb.org/"
   chart: stable/mariadb
-  chart-version: 1.0.7
-  chart-offline: catalog/mariadb/mariadb-1.0.7.tgz
+  chart-version: 4.0.0
+  chart-offline: catalog/mariadb/mariadb-4.0.0.tgz
   plans:
   -
     _id: e79306ef-4e10-4e3d-b38e-ffce88c90f59
-    _name: free
-    description: "Free MariaDB Instance"
+    _name: standard-alone
+    description: "Free MariaDB One Standard Instance"
     bindable: true
     free: true
     metadata:
       costs:
         - amount:
-            usd: 0.1
+            usd: 0.0
           unit: MONTHLY
       bullets:
-        - Single node mariadb service
+        - single node mariadb service
     chart-values:
-        persistence.enabled: false
-        persistence.size: 8Gi
-        persistence.storageClass: local-storage
-        serviceType: ClusterIP
+        master.persistence.enabled: false
+        replication.enabled: false
+        service.type: ClusterIP
+        #persistence.size: 8Gi
+        #persistence.storageClass: local-storage
+  -
+    _id: a1f0ac4a-c755-481c-b61d-8fab29c3f16e
+    _name: standard-cluster
+    description: "Free MariaDB One Standard Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
+      bullets:
+        - one master node, default two slave node,mariadb service
+    chart-values:
+        master.persistence.enabled: false
+        slave.persistence: false
+        replication.enabled: true
+        service.type: ClusterIP
+        #persistence.size: 8Gi
+        #persistence.storageClass: local-storage
 ---
 chart-values:
-  mariadbUser: "{{ generateUsername }}"
-  mariadbPassword: "{{ generatePassword }}"
-  mariadbRootPassword: "{{ generatePassword }}"
-  mariadbDatabase: db
+  rootUser.password: "{{ generatePassword }}"
+  db.user: "{{ generateUsername }}"
+  db.password: "{{ generatePassword }}"
+  db.name: db
 ---
 user-credentials:
-  uri: "mysql://{{ .Values.mariadbUser }}:{{ .Values.mariadbPassword }}@{{ .Cluster.Address }}:{{ .Cluster.Port }}/{{ .Values.mariadbDatabase }}"
-  jdbcUrl: "jdbc:mysql://{{ .Values.mariadbUser }}:{{ .Values.mariadbPassword }}@{{ .Cluster.Address }}:{{ .Cluster.Port }}/{{ .Values.mariadbDatabase }}?user={{ .Values.mariadbUser }}\u0026password={{ .Values.mariadbPassword }}"
-  username: "{{ .Values.mariadbUser }}"
-  password: "{{ .Values.mariadbPassword }}"
-  database: "{{ .Values.mariadbDatabase }}"
+  uri: "mysql://{{ .Values.db.user }}:{{ .Values.db.password }}@{{ .Cluster.Address }}:{{ .Cluster.Port }}/{{ .Values.db.name }}"
+  jdbcUrl: "jdbc:mysql://{{ .Values.db.user }}:{{ .Values.mariadbPassword }}@{{ .Cluster.Address }}:{{ .Cluster.Port }}/{{ .Values.db.name }}?user={{ .Values.db.user }}\u0026password={{ .Values.db.password }}"
+  username: "{{ .Values.db.user }}"
+  password: "{{ .Values.db.password }}"
+  database: "{{ .Values.db.name }}"
   hostname: "{{ .Cluster.Address }}"
   port: "{{ .Cluster.Port }}"

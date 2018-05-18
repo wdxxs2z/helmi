@@ -16,13 +16,13 @@ service:
     documentationUrl: "https://github.com/kubernetes/charts/tree/master/stable/redis"
     supportUrl: "https://redis.io/"
   chart: stable/redis
-  chart-version: 3.0.2
-  chart-offline: catalog/redis/redis-3.0.2.tgz
+  chart-version: 3.0.3
+  chart-offline: catalog/redis/redis-3.0.3.tgz
   plans:
   -
     _id: 381c8dd1-676b-4d1f-ae00-97e8304f966f
-    _name: free
-    description: "Free Redis Instance"
+    _name: standard-alone
+    description: "Free Standard One Redis Instance"
     bindable: true
     free: true
     metadata:
@@ -33,8 +33,27 @@ service:
       bullets:
         - Single node redis service
     chart-values:
+      master.persistence.enabled: false
       master.persistence.size: 8Gi
       master.persistence.storageClass: local-storage
+  -
+    _id: b4ac8e9e-1b59-4f1e-b992-1b1de596ed6c
+    _name: standard-cluster
+    description: "Free Standard 3 Redis Instance"
+    bindable: true
+    free: true
+    metadata:
+      costs:
+        - amount:
+            usd: 0.0
+          unit: MONTHLY
+      bullets:
+        - Single node redis service
+    chart-values:
+      master.persistence.enabled: false
+      master.persistence.size: 8Gi
+      master.persistence.storageClass: local-storage
+      cluster.slaveCount: 3
 ---
 chart-values:
   password: "{{ generatePassword }}"
