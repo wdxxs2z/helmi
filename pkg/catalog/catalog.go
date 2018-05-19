@@ -3,16 +3,17 @@ package catalog
 import (
 	"log"
 	"strings"
-	"gopkg.in/yaml.v2"
+	"strconv"
 	"fmt"
 	"path/filepath"
 	"os"
 	"io/ioutil"
 	"bytes"
 	"text/template"
+
+	"gopkg.in/yaml.v2"
 	"github.com/Masterminds/sprig"
 	"github.com/satori/go.uuid"
-	"strconv"
 
 	helmi "github.com/wdxxs2z/helmi/pkg/helm"
 	"github.com/wdxxs2z/helmi/pkg/kubectl"
@@ -278,7 +279,7 @@ type credentialVars struct {
 	Cluster clusterVars
 }
 
-type valueVars map[string]string
+type valueVars map[interface{}]interface{}
 
 type releaseVars struct {
 	Name      string
@@ -288,13 +289,28 @@ type releaseVars struct {
 type clusterVars struct {
 	Address    	string
 	Hostname   	string
+	IngressAddress  string
+	IngressPort     string
 	helmStatus 	helmi.Status
 }
 
-func (c clusterVars) Port(port ...int) string {
-	if len(c.helmStatus.IngressPorts) > 0 {
-		return strconv.Itoa(c.helmStatus.IngressPorts[0])
+func ingressPort(helmStatus helmi.Status) string {
+	if len(helmStatus.IngressPorts) > 0 {
+		return strconv.Itoa(helmStatus.IngressPorts[0])
+	} else {
+		return ""
 	}
+}
+
+func ingressAddress(helmStatus helmi.Status) string {
+	if len(helmStatus.IngressHosts) > 0 {
+		return helmStatus.IngressHosts[0]
+	} else {
+		return ""
+	}
+}
+
+func (c clusterVars) Port(port ...int) string {
 
 	for clusterPort, nodePort := range c.helmStatus.NodePorts {
 		if len(port) == 0 || port[0] == clusterPort {
@@ -319,10 +335,6 @@ func extractAddress(kubernetesNodes []kubectl.Node, helmStatus helmi.Status, ser
 	// return dns name if set as environment variable
 	if value, ok := os.LookupEnv("DOMAIN"); ok {
 		return value
-	}
-
-	if len(helmStatus.IngressHosts) > 0 {
-		return helmStatus.IngressHosts[0]
 	}
 
 	if helmStatus.ServiceType == "ClusterIP" {
@@ -362,7 +374,8 @@ func extractHostname(kubernetesNodes []kubectl.Node) string {
 	return ""
 }
 
-func (s *Service) UserCredentials(plan *Plan, kubernetesNodes []kubectl.Node, helmStatus helmi.Status, values map[string]string) (map[string]interface{}, error) {
+func (s *Service) UserCredentials(plan *Plan, kubernetesNodes []kubectl.Node, helmStatus helmi.Status, values map[interface{}]interface{}) (map[string]interface{}, error) {
+
 	env := credentialVars{
 		Service: s,
 		Plan:    plan,
@@ -374,6 +387,8 @@ func (s *Service) UserCredentials(plan *Plan, kubernetesNodes []kubectl.Node, he
 		Cluster: clusterVars{
 			Address:    extractAddress(kubernetesNodes, helmStatus, s.Name),
 			Hostname:   extractHostname(kubernetesNodes),
+			IngressAddress: ingressAddress(helmStatus),
+			IngressPort: ingressPort(helmStatus),
 			helmStatus: helmStatus,
 		},
 	}
@@ -387,7 +402,9 @@ func (s *Service) UserCredentials(plan *Plan, kubernetesNodes []kubectl.Node, he
 	var v struct {
 		UserCredentials map[string]interface{} `yaml:"user-credentials"`
 	}
+
 	err = yaml.Unmarshal(b.Bytes(), &v)
+
 	if err != nil {
 		return nil, err
 	}

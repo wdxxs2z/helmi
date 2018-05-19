@@ -213,7 +213,8 @@ func GetCredentials(catalog *catalog.Catalog, serviceId string, planId string, i
 		return nil, err
 	}
 
-	values, err := client.GetReleaseValues(name)
+	//values, err := client.GetReleaseValues(name)
+	values, err := client.ParseReleaseValues(name)
 
 	if err != nil {
 		logger.Error("failed-get-helm-values", err, lager.Data{

@@ -36,6 +36,8 @@ service:
         master.persistence.enabled: false
         replication.enabled: false
         service.type: ClusterIP
+        master.persistence.accessModes: ""
+        slave.persistence.accessModes: ""
         #persistence.size: 8Gi
         #persistence.storageClass: local-storage
   -
@@ -67,7 +69,7 @@ chart-values:
 ---
 user-credentials:
   uri: "mysql://{{ .Values.db.user }}:{{ .Values.db.password }}@{{ .Cluster.Address }}:{{ .Cluster.Port }}/{{ .Values.db.name }}"
-  jdbcUrl: "jdbc:mysql://{{ .Values.db.user }}:{{ .Values.mariadbPassword }}@{{ .Cluster.Address }}:{{ .Cluster.Port }}/{{ .Values.db.name }}?user={{ .Values.db.user }}\u0026password={{ .Values.db.password }}"
+  jdbcUrl: "jdbc:mysql://{{ .Values.db.user }}:{{ .Values.db.password }}@{{ .Cluster.Address }}:{{ .Cluster.Port }}/{{ .Values.db.name }}?user={{ .Values.db.user }}\u0026password={{ .Values.db.password }}"
   username: "{{ .Values.db.user }}"
   password: "{{ .Values.db.password }}"
   database: "{{ .Values.db.name }}"

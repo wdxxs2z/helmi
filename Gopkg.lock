@@ -360,12 +360,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/kylelemons/go-gypsy"
-  packages = ["yaml"]
-  revision = "08cad365cd28a7fba23bb1e57aa43c5e18ad8bb8"
-
-[[projects]]
-  branch = "master"
   name = "github.com/mailru/easyjson"
   packages = [
     "buffer",
@@ -488,6 +482,12 @@
   packages = ["."]
   revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
   version = "v1.2.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/smallfish/simpleyaml"
+  packages = ["."]
+  revision = "a32031077861b1fbdf988d2c0865e98ec832dd4c"
 
 [[projects]]
   name = "github.com/spf13/cobra"
@@ -1157,6 +1157,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b1c7de65a7f384dc2d473619c7ac4db13c0a44bcfccb065f6fabc618e67a3b3d"
+  inputs-digest = "b4b0a3c94b4193e811efb4284fff354f44d84a7d07df06cb3aec47165b94a90c"
   solver-name = "gps-cdcl"
   solver-version = 1

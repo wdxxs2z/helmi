@@ -1,24 +1,26 @@
 package helm
 
 import (
-	"k8s.io/helm/pkg/helm"
-	"k8s.io/helm/pkg/helm/portforwarder"
-	"github.com/wdxxs2z/helmi/pkg/config"
 	"fmt"
-	"k8s.io/helm/pkg/helm/environment"
-	"code.cloudfoundry.org/lager"
-	"k8s.io/helm/pkg/kube"
-	"github.com/wdxxs2z/helmi/pkg/utils"
-	rspb "k8s.io/helm/pkg/proto/hapi/release"
 	"time"
+	"strings"
+
+	"k8s.io/helm/pkg/kube"
+	"k8s.io/helm/pkg/helm"
 	"k8s.io/helm/pkg/timeconv"
 	"k8s.io/helm/pkg/chartutil"
-	"github.com/kylelemons/go-gypsy/yaml"
-	"bytes"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/helm/pkg/helm/helmpath"
+	"k8s.io/helm/pkg/helm/environment"
+	"k8s.io/helm/pkg/helm/portforwarder"
+	rspb "k8s.io/helm/pkg/proto/hapi/release"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
+	"code.cloudfoundry.org/lager"
+	"github.com/smallfish/simpleyaml"
+
 	"github.com/wdxxs2z/helmi/pkg/kubectl"
-	"strings"
+	"github.com/wdxxs2z/helmi/pkg/config"
+	"github.com/wdxxs2z/helmi/pkg/utils"
 )
 
 type Client struct {
@@ -131,7 +133,7 @@ func (c *Client) DeleteRelease(release string) error {
 	return nil
 }
 
-func (c *Client) GetReleaseValues (release string) (map[string]string, error) {
+func (c *Client) ParseReleaseValues (release string) (map[interface{}]interface{}, error) {
 	res , err := c.helm.ReleaseContent(release)
 	if err != nil {
 		return nil, err
@@ -141,12 +143,11 @@ func (c *Client) GetReleaseValues (release string) (map[string]string, error) {
 	if err != nil{
 		return nil, err
 	}
-	node, err := yaml.Parse(bytes.NewReader([]byte(content)))
-	if err != nil {
+	yamlContent, converErr := simpleyaml.NewYaml([]byte(content))
+	if converErr != nil {
 		return nil, err
 	}
-	properties := c.readYamlProperties(node, "")
-	return properties, nil
+	return yamlContent.Map()
 }
 
 func (c *Client) GetStatus(release string) (Status, error) {
@@ -229,30 +230,4 @@ func getHelmClient(config config.Config) (*helm.Client, error){
 		}
 		return hclient, nil
 	}
-}
-
-func (c *Client) readYamlProperties(node yaml.Node, prefix string) map[string]string {
-	values := map[string]string{}
-
-	switch n := node.(type) {
-	case yaml.Map:
-		for mapKey, mapNode := range n {
-			nodeName := prefix
-
-			if len(nodeName) > 0 {
-				nodeName += "."
-			}
-
-			nodeName += mapKey
-
-			for key, value := range c.readYamlProperties(mapNode, nodeName) {
-				values[key] = value
-			}
-		}
-	case yaml.Scalar:
-		value := n.String()
-		values[prefix] = value
-	}
-
-	return values
 }
