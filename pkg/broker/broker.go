@@ -171,7 +171,26 @@ func (b *HelmBroker) Update(context context.Context, instanceID string, details 
 		helmicons.AcceptsIncompleteLogKey: 	asyncAllowed,
 	})
 
-	// TODO
+	updateParameters := ProvisionParameters{}
+	if b.allowUserProvisionParameters && len(details.RawParameters) > 0 {
+		if err:= json.Unmarshal(details.RawParameters, &updateParameters); err!= nil {
+			return brokerapi.UpdateServiceSpec{}, err
+		}
+	}
+
+	requestContext := RequestContext{}
+	if len(details.RawContext) >0 {
+		if err := json.Unmarshal(details.RawContext, & requestContext); err!= nil {
+			return brokerapi.UpdateServiceSpec{}, err
+		}
+	}
+
+	//This place may cause some problem: if we remove some of the parameters previously set, may need some persistent operating,so need validate the parameters
+	//TODO
+	//dao.getParameterWithRelease(release)
+	if err := release.Update(instanceID, &b.catalog, details.ServiceID, details.PlanID, b.helmClient, asyncAllowed, updateParameters, requestContext, b.logger); err != nil {
+		return brokerapi.UpdateServiceSpec{}, err
+	}
 
 	return brokerapi.UpdateServiceSpec{IsAsync: false}, nil
 }

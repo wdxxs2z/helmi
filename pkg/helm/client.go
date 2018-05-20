@@ -104,13 +104,71 @@ func (c *Client) InstallRelease(release string, chartName string, version string
 		return nil, fmt.Errorf("convert values to yaml values cause an error: %s", err)
 	}
 
-	chart, err := getChart(c.config, c.env, chartName, version, chartOffline,c.logger)
+	chart, err := getChart(c.config, c.env, chartName, version, chartOffline, c.logger)
 
 	if err != nil {
 		return nil, fmt.Errorf("install release %s, cause an error: %s", chartName, err)
 	}
 
 	res, err := c.helm.InstallReleaseFromChart(chart, namespace, installOpts(release, wait, rawValues)...)
+	if res == nil || res.Release == nil {
+		rls ,err := c.getRelease(release)
+		if err != nil {
+			return nil, fmt.Errorf("get the release cause an error: %s", err)
+		}
+		if rls != nil {
+			return rls, nil
+		}
+	}else {
+		return res.Release, nil
+	}
+	return nil, err
+}
+
+func (c *Client) UpdateRelease(release string, chartName string, version string, chartOffline string, values map[string]string, namespace string, acceptsIncomplete bool) (*rspb.Release, error) {
+	displayValues := make(map[string]string)
+	for name, value := range values {
+		if strings.Contains(name, "Password") || strings.Contains(name, "password") {
+			displayValues[name] = "hidden"
+		} else {
+			displayValues[name] = value
+		}
+	}
+	c.logger.Debug("update-release", lager.Data{
+		"release-name": release,
+		"chart-name": chartName,
+		"version": version,
+		"values": displayValues,
+		"namespace": namespace,
+	})
+
+	var wait bool = false
+
+	if acceptsIncomplete == false {
+		wait = true
+	}
+
+	rawValues, err := utils.ConvertInterfaceToByte(values)
+	if err != nil {
+		return nil, fmt.Errorf("convert values to yaml values cause an error: %s", err)
+	}
+
+	exist, err := c.ExistRelease(release)
+	if err != nil {
+		return nil, err
+	}
+
+	if exist == false {
+		return nil, fmt.Errorf("release %s not exist.", release)
+	}
+
+	chart, err := getChart(c.config, c.env, chartName, version, chartOffline, c.logger)
+	if err != nil {
+		return nil, fmt.Errorf("upgrade release %s, cause an error: %s", chartName, err)
+	}
+
+	res, err := c.helm.UpdateReleaseFromChart(release, chart, updateOpts(release, wait, rawValues)...)
+
 	if res == nil || res.Release == nil {
 		rls ,err := c.getRelease(release)
 		if err != nil {

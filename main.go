@@ -27,7 +27,7 @@ var (
 
 func init() {
 	flag.StringVar(&configpath, "config", "", "The helmi config path")
-	flag.StringVar(&port, "port", "5000", "Listen port")
+	flag.StringVar(&port, "port", "8080", "Listen port")
 }
 
 func buildLogger(logLevel string) lager.Logger {

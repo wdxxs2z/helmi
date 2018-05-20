@@ -14,10 +14,10 @@ func installOpts(release string, wait bool, vals []byte) []helm.InstallOption {
 	}
 }
 
-func updateOpts(release string, vals []byte) []helm.UpdateOption {
+func updateOpts(release string, wait bool, vals []byte) []helm.UpdateOption {
 	return []helm.UpdateOption{
 		helm.UpdateValueOverrides(vals),
-		helm.UpgradeWait(true),
+		helm.UpgradeWait(wait),
 	}
 }
 

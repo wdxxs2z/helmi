@@ -10,8 +10,8 @@ metadata:
 spec:
   type: {{ .Values.serviceType }}
   ports:
-    - port: 5000
-      targetPort: 5000
+    - port: 8080
+      targetPort: 8080
       name: helmi-port
   selector:
     app: {{ template "fullname" . }}

@@ -89,6 +89,59 @@ func Install(catalog *catalog.Catalog,
 	return nil
 }
 
+func Update(id string, catalog *catalog.Catalog, serviceId string, planId string, client *helmi.Client, acceptsIncomplete bool, parameters map[string]string, context map[string]string,logger lager.Logger) error {
+	logger.Debug("release-update",lager.Data{
+		helmicons.InstanceIDLogKey: id,
+	})
+
+	name := getName(id)
+	service, _ := catalog.GetService(serviceId)
+	plan, _ := catalog.GetServicePlan(serviceId, planId)
+
+	chartName, chartErr := getChart(service, plan)
+	chartVersion, chartVersionErr := getChartVersion(service, plan)
+	chartNamespace := getChartNamespace(context, parameters)
+
+	if chartErr != nil {
+		logger.Error("failed-install-release", chartErr, lager.Data{
+			"id": id,
+			"name": name,
+			"service-id": serviceId,
+			"plan-id": planId,
+		})
+		return chartErr
+	}
+
+	if chartVersionErr != nil {
+		chartVersion = ""
+	}
+
+	_, err := client.UpdateRelease(name, chartName, chartVersion, service.ChartOffline, parameters, chartNamespace, acceptsIncomplete)
+
+	if err != nil {
+		logger.Error("failed-upgrade-release", err, lager.Data{
+			"id": id,
+			"name": name,
+			"chart": chartName,
+			"chart-version": chartVersion,
+			"service-id": serviceId,
+			"plan-id": planId,
+		})
+		return err
+	}
+
+	logger.Info("release-upgrade-success", lager.Data{
+		"id": id,
+		"name": name,
+		"chart": chartName,
+		"chart-version": chartVersion,
+		"serviceId": serviceId,
+		"planId": planId,
+	})
+
+	return nil
+}
+
 func Exists(id string, client *helmi.Client, logger lager.Logger) (bool, error) {
 	logger.Debug("release-exist-check",lager.Data{
 		helmicons.InstanceIDLogKey: id,
