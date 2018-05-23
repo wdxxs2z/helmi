@@ -40,3 +40,7 @@
 [[constraint]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
+
+[[constraint]]
+  name = "github.com/pivotal-cf/brokerapi"
+  version = "v2.0.1"

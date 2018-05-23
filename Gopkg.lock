@@ -8,10 +8,10 @@
   version = "v0.21.0"
 
 [[projects]]
+  branch = "master"
   name = "code.cloudfoundry.org/lager"
   packages = ["."]
-  revision = "0bfa98e49e7a976af91e918d47978f07c00b081f"
-  version = "v1.0.0"
+  revision = "b60e04e119450552243196105bae0d42179ee0ca"
 
 [[projects]]
   branch = "master"
@@ -86,6 +86,19 @@
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
+
+[[projects]]
+  name = "github.com/coreos/etcd"
+  packages = [
+    "auth/authpb",
+    "clientv3",
+    "etcdserver/api/v3rpc/rpctypes",
+    "etcdserver/etcdserverpb",
+    "mvcc/mvccpb",
+    "pkg/types"
+  ]
+  revision = "70c8726202dd91e482fb4029fd14af1d4ed1d5af"
+  version = "v3.3.5"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -214,7 +227,9 @@
 [[projects]]
   name = "github.com/gogo/protobuf"
   packages = [
+    "gogoproto",
     "proto",
+    "protoc-gen-gogo/descriptor",
     "sortkeys"
   ]
   revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
@@ -428,15 +443,12 @@
 
 [[projects]]
   name = "github.com/pivotal-cf/brokerapi"
-  packages = ["."]
+  packages = [
+    ".",
+    "auth"
+  ]
   revision = "bc29a3e7d6f911097c2c4998fc7cc7a408cc4268"
   version = "v2.0.1"
-
-[[projects]]
-  branch = "fix-large-token"
-  name = "github.com/pivotal-golang/lager"
-  packages = ["."]
-  revision = "ce912f1f6e007e955045546229ae42ba5ac66fa7"
 
 [[projects]]
   name = "github.com/prometheus/client_golang"
@@ -1157,6 +1169,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b4b0a3c94b4193e811efb4284fff354f44d84a7d07df06cb3aec47165b94a90c"
+  inputs-digest = "a13913093dc40dee68bb44c6a53380a073c78cfc7966442d50677c941103ae61"
   solver-name = "gps-cdcl"
   solver-version = 1

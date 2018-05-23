@@ -237,9 +237,9 @@ func (c *Client) getRelease(release string) (*rspb.Release, error)  {
 	if err != nil {
 		return nil, err
 	}
-	if releases.Count < 1 {
+	if releases.GetCount() < 1 {
 		return nil, nil
-	} else if releases.Count >1 {
+	} else if releases.GetCount() >1 {
 		return nil, fmt.Errorf("Error in multi releases exist for release %s", release)
 	}
 	return releases.Releases[0], nil

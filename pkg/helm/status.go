@@ -158,7 +158,7 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 			columnType = indexType
 		} else {
 			if columnPort >= 0 && columnType >= 0 {
-				status.ServiceType = strings.Fields(line[columnType:])[0]
+				status.ServiceType = strings.Fields(line[columnType - 1:])[0]
 
 				for _, portPair := range strings.Split(strings.Fields(line[columnPort:])[0], ",") {
 					portFields := strings.FieldsFunc(portPair, func(c rune) bool {

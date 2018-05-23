@@ -40,6 +40,7 @@ type HelmBroker struct {
 	logger                  	lager.Logger
 	brokerRouter			*mux.Router
 	helmClient                      *helmi.Client
+	config                          config.Config
 }
 
 type CatalogExternal struct {
@@ -56,6 +57,7 @@ func New(config config.Config, catalog catalog.Catalog, client *helmi.Client, lo
 		logger:				logger.Session("service-broker"),
 		brokerRouter:			brokerRouter,
 		helmClient:                     client,
+		config:                         config,
 	}
 	brokerapi.AttachRoutes(broker.brokerRouter, broker, logger)
 	liveness := broker.brokerRouter.HandleFunc("/liveness", livenessHandler).Methods(http.MethodGet)
@@ -157,6 +159,7 @@ func (b *HelmBroker) Provision(context context.Context, instanceID string, detai
 			return brokerapi.ProvisionedServiceSpec{}, err
 		}
 	}
+
 	if err := release.Install(&b.catalog, details.ServiceID, servicePlan.Id, instanceID, asyncAllowed, provisionParameters, requestContext, b.helmClient, b.logger); err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, err
 	}
@@ -188,6 +191,7 @@ func (b *HelmBroker) Update(context context.Context, instanceID string, details 
 	//This place may cause some problem: if we remove some of the parameters previously set, may need some persistent operating,so need validate the parameters
 	//TODO
 	//dao.getParameterWithRelease(release)
+
 	if err := release.Update(instanceID, &b.catalog, details.ServiceID, details.PlanID, b.helmClient, asyncAllowed, updateParameters, requestContext, b.logger); err != nil {
 		return brokerapi.UpdateServiceSpec{}, err
 	}
