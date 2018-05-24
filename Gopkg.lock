@@ -443,10 +443,7 @@
 
 [[projects]]
   name = "github.com/pivotal-cf/brokerapi"
-  packages = [
-    ".",
-    "auth"
-  ]
+  packages = ["."]
   revision = "bc29a3e7d6f911097c2c4998fc7cc7a408cc4268"
   version = "v2.0.1"
 
@@ -1169,6 +1166,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a13913093dc40dee68bb44c6a53380a073c78cfc7966442d50677c941103ae61"
+  inputs-digest = "306eec282a5c3edd275d2c1354abe7259b34979c89d17ee8752d326356933a3a"
   solver-name = "gps-cdcl"
   solver-version = 1

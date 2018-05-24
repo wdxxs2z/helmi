@@ -24,6 +24,7 @@ type TillerSet struct {
 	Namespace		string          	`yaml:"namespace"`
 	Home			string			`yaml:"home"`
 	ConnectionTimeout       int64               	`yaml:"connection_timeout"`
+	ForceRemoteRepo         bool                    `yaml:"force_remote_repo"`
 	Repos           	[]Repository		`yaml:"repos"`
 }
 

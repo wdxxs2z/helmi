@@ -39,12 +39,22 @@ func NewClient (config config.Config, logger lager.Logger) *Client {
 		sessionLogger.Error("handing-helm-directors", err, lager.Data{})
 		return nil
 	}
-	err = initRepos(helmEnv, sessionLogger, config)
-	if err != nil {
-		sessionLogger.Error("init-helm-repo", err, lager.Data{
-			"warn-info": "if your under offline mode, please make sure your catalog dir exist all service packages.",
-		})
+
+	if config.TillerConfig.ForceRemoteRepo {
+		if err := initRepos(helmEnv, sessionLogger, config); err != nil {
+			sessionLogger.Error("force-init-helm-repo", err, lager.Data{
+				"message": "force_remote_repo is true, if you under offline mode, please set the value is false.",
+			})
+			return nil
+		}
+	} else {
+		if err := initRepos(helmEnv, sessionLogger, config); err != nil {
+			sessionLogger.Error("init-helm-repo", err, lager.Data{
+				"message": "if your under offline mode, please make sure your catalog dir exist all service packages.This is a warning.",
+			})
+		}
 	}
+
 	helmClient, err := getHelmClient(config)
 	if err != nil {
 		sessionLogger.Error("create-helm-client", err, lager.Data{})
