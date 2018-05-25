@@ -206,6 +206,11 @@ func (b *HelmBroker) Deprovision(context context.Context, instanceID string, det
 		helmicons.AcceptsIncompleteLogKey: 	asyncAllowed,
 	})
 
+	exist, err := release.Exists(instanceID, b.helmClient, b.logger)
+	if !exist && err == nil {
+		return brokerapi.DeprovisionServiceSpec{}, brokerapi.ErrInstanceDoesNotExist
+	}
+
 	if err := release.Delete(instanceID, b.helmClient, b.logger); err != nil {
 		return brokerapi.DeprovisionServiceSpec{}, err
 	}
