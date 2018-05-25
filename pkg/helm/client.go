@@ -78,7 +78,7 @@ func (c *Client) ExistRelease(release string) (bool, error) {
 	})
 	statusRes, err := c.helm.ReleaseStatus(release)
 	if err != nil {
-		if strings.Contains(err, "not found") {
+		if strings.Contains(err.Error(), "not found") {
 			return false, nil
 		} else {
 			return false, fmt.Errorf("check release cause an error: %s", err)
