@@ -18,6 +18,7 @@ service:
   chart: stable/rabbitmq
   chart-version: 1.1.2
   chart-offline: catalog/rabbitmq/rabbitmq-1.1.2.tgz
+  internel-discovery-name: rabbitmq
   plans:
   -
     _id: d2badac0-8e41-4588-a9fc-0e662c480610

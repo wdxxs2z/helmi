@@ -18,6 +18,7 @@ service:
   chart: monostream/muescheli
   chart-version: 0.1.6
   chart-offline: catalog/muescheli/muescheli-0.1.6.tgz
+  internel-discovery-name: muescheli
   plans:
   -
     _id: 75b7b1de-70ef-4499-b55c-e2337d320626

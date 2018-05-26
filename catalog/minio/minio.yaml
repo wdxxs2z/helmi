@@ -18,6 +18,7 @@ service:
   chart: stable/minio
   chart-version: 1.1.1
   chart-offline: catalog/minio/minio-1.1.1.tgz
+  internel-discovery-name: cassandra
   plans:
   -
     _id: f003f191-c250-4e85-9abd-038af629ad71

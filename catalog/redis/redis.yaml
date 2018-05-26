@@ -18,6 +18,7 @@ service:
   chart: stable/redis
   chart-version: 3.0.3
   chart-offline: catalog/redis/redis-3.0.3.tgz
+  internel-discovery-name: redis
   plans:
   -
     _id: 381c8dd1-676b-4d1f-ae00-97e8304f966f

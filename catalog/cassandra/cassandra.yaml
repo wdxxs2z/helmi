@@ -18,6 +18,7 @@ service:
   chart: monostream/cassandra
   chart-version: 0.2.8
   chart-offline: catalog/cassandra/cassandra-0.2.8.tgz
+  internel-discovery-name: cassandra
   plans:
   -
     _id: 169d5466-12c9-4a89-a063-f72048b3d4c4

@@ -18,6 +18,7 @@ service:
   chart: stable/mongodb
   chart-version: 2.0.5
   chart-offline: catalog/mongodb/mongodb-2.0.5.tgz
+  internel-discovery-name: mongodb
   plans:
   -
     _id: 905b1f0e-c815-41d4-b3e4-6ccb602b9e8e

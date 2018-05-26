@@ -18,6 +18,7 @@ service:
   chart: stable/mariadb
   chart-version: 4.0.0
   chart-offline: catalog/mariadb/mariadb-4.0.0.tgz
+  internel-discovery-name: mariadb-master
   plans:
   -
     _id: e79306ef-4e10-4e3d-b38e-ffce88c90f59

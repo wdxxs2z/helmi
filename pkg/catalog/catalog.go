@@ -39,6 +39,8 @@ type Service struct {
 	ChartVersion 		string            	`yaml:"chart-version"`
 	ChartOffline            string                  `yaml:"chart-offline"`
 
+	InternalDiscoveryName   string                  `yaml:"internel-discovery-name"`
+
 	Plans 			[]Plan 			`yaml:"plans"`
 
 	valuesTemplate      	*template.Template
@@ -385,7 +387,7 @@ func (s *Service) UserCredentials(plan *Plan, kubernetesNodes []kubectl.Node, he
 			Namespace: helmStatus.Namespace,
 		},
 		Cluster: clusterVars{
-			Address:    extractAddress(kubernetesNodes, helmStatus, s.Name),
+			Address:    extractAddress(kubernetesNodes, helmStatus, s.InternalDiscoveryName),
 			Hostname:   extractHostname(kubernetesNodes),
 			IngressAddress: ingressAddress(helmStatus),
 			IngressPort: ingressPort(helmStatus),

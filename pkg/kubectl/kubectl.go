@@ -46,6 +46,15 @@ func GetKubeClient() (*kubernetes.Clientset, *rest.Config, error){
 	return kubeclient, kubeconfig, nil
 }
 
+func GetSVCDescribe(rlsName, namespace string) {
+	clientset, _, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	clientset.CoreV1().Services(namespace)
+	//TODO
+}
+
 func CheckVersion() (*version.Info, error){
 	clientset, _, err := GetKubeClient()
 	if err != nil {
