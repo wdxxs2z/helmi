@@ -141,6 +141,11 @@ func (b *HelmBroker) Provision(context context.Context, instanceID string, detai
 		helmicons.AcceptsIncompleteLogKey: 	asyncAllowed,
 	})
 
+	exist, err := release.Exists(instanceID, b.helmClient, b.logger)
+	if exist && err == nil {
+		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceAlreadyExists
+	}
+
 	provisionParameters := ProvisionParameters{}
 	if b.allowUserProvisionParameters && len(details.RawParameters) > 0 {
 		if err:= json.Unmarshal(details.RawParameters, &provisionParameters); err!= nil {

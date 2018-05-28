@@ -10,7 +10,7 @@ helmi_config:
   tille_config:
     host:
     namespace: kube-system
-    force_remote_repo: true
+    force_remote_repo: false
     home: .helm
     connection_timeout: 60
     repos:

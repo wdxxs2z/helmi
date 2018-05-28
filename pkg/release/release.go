@@ -337,9 +337,9 @@ func getChartNamespace(context map[string]string, parameters map[string]string) 
 			return value
 		}
 	}
-	for key, value := range parameters {
-		if strings.EqualFold(key, "namespace") {
-			return value
+	for key, value := range context {
+		if strings.EqualFold(key, "organization_guid") {
+			return "cf-" + value
 		}
 	}
 	return ""
