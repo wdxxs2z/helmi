@@ -314,6 +314,14 @@ func ingressAddress(helmStatus helmi.Status) string {
 
 func (c clusterVars) Port(port ...int) string {
 
+	if c.helmStatus.ServiceType == "LoadBalancer" {
+		for clusterPort, nodePort := range c.helmStatus.ClusterPorts {
+			if len(port) == 0 || port[0] == clusterPort {
+				return strconv.Itoa(nodePort)
+			}
+		}
+	}
+
 	for clusterPort, nodePort := range c.helmStatus.NodePorts {
 		if len(port) == 0 || port[0] == clusterPort {
 			return strconv.Itoa(nodePort)
@@ -356,8 +364,7 @@ func extractAddress(kubernetesNodes []kubectl.Node, helmStatus helmi.Status, ser
 			}
 		}
 	} else if helmStatus.ServiceType == "LoadBalancer" {
-		//TODO
-		return ""
+		return helmStatus.ExternalIP
 	} else if helmStatus.ServiceType == "ExternalName" {
 		//TODO
 		return ""

@@ -23,6 +23,7 @@ const (
 	AvailableLabel = "AVAILABLE"
 	PortsLabel = "PORT(S)"
 	TypeLabel = "TYPE"
+	ExternalIPLabel = "EXTERNAL-IP"
 	IngressHostsLabel = "HOSTS"
 	IngressPortsLabel = "PORTS"
 )
@@ -41,6 +42,8 @@ type Status struct {
 
 	IngressHosts []string
 	IngressPorts []int
+
+	ExternalIP string
 
 	ServiceType string
 }
@@ -64,6 +67,7 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 	columnType := -1
 	columnIngressHosts := -1
 	columnIngressPorts := -1
+	columnExternalIP := -1
 
 	var lastResource string
 
@@ -80,6 +84,7 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 			columnType = -1
 			columnIngressHosts = -1
 			columnIngressPorts = -1
+			columnExternalIP = -1
 		}
 
 		if strings.HasPrefix(line, ResourcePrefix) {
@@ -93,6 +98,7 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 		indexType := strings.Index(line, TypeLabel)
 		indexIngressHosts := strings.Index(line, IngressHostsLabel)
 		indexIngressPorts := strings.Index(line, IngressPortsLabel)
+		indexExternalIP := strings.Index(line, ExternalIPLabel)
 
 		if indexDesired >= 0 && indexCurrent >= 0 {
 			columnDesired = indexDesired
@@ -153,12 +159,14 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 			}
 		}
 
-		if indexPort >= 0 && indexType >= 0 {
+		if indexPort >= 0 && indexType >= 0 && indexExternalIP >= 0 {
 			columnPort = indexPort
 			columnType = indexType
+			columnExternalIP = indexExternalIP
 		} else {
-			if columnPort >= 0 && columnType >= 0 {
+			if columnPort >= 0 && columnType >= 0 && columnExternalIP >= 0 {
 				status.ServiceType = strings.Fields(line[columnType - 1:])[0]
+				status.ExternalIP = strings.Fields(line[columnExternalIP - 1:])[0]
 
 				for _, portPair := range strings.Split(strings.Fields(line[columnPort:])[0], ",") {
 					portFields := strings.FieldsFunc(portPair, func(c rune) bool {
