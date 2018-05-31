@@ -220,7 +220,7 @@ func (b *HelmBroker) Deprovision(context context.Context, instanceID string, det
 		return brokerapi.DeprovisionServiceSpec{}, err
 	}
 
-	return brokerapi.DeprovisionServiceSpec{IsAsync: false}, nil
+	return brokerapi.DeprovisionServiceSpec{}, nil
 }
 
 func (b *HelmBroker) Bind(context context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error){
@@ -246,6 +246,7 @@ func (b *HelmBroker) Bind(context context.Context, instanceID, bindingID string,
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
+
 
 	binding := brokerapi.Binding{Credentials: credentials}
 	return binding, nil
@@ -275,10 +276,14 @@ func (b *HelmBroker) LastOperation(context context.Context, instanceID, operatio
 	})
 
 	status, err := release.GetStatus(instanceID, b.helmClient, b.logger)
+
 	if err != nil {
-		return brokerapi.LastOperation{
-			State: "failed",
-		}, err
+		exists, existsErr := release.Exists(instanceID, b.helmClient, b.logger)
+		if existsErr == nil && !exists {
+			return brokerapi.LastOperation{}, brokerapi.ErrInstanceDoesNotExist
+		}
+
+		return brokerapi.LastOperation{}, err
 	}
 
 	if status.IsFailed {
@@ -289,7 +294,7 @@ func (b *HelmBroker) LastOperation(context context.Context, instanceID, operatio
 
 	if status.IsAvailable {
 		return brokerapi.LastOperation{
-			State: "success",
+			State: "succeeded",
 		},nil
 	}
 

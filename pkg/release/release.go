@@ -165,21 +165,6 @@ func Delete(id string, client *helmi.Client, logger lager.Logger) error {
 	name := getName(id)
 	err := client.DeleteRelease(name)
 	if err != nil {
-		exists, existsErr := client.ExistRelease(name)
-
-		if existsErr == nil && !exists {
-			logger.Info("release-instance-not-existed", lager.Data{
-				"id": id,
-				"name": name,
-			})
-			return nil
-		}
-
-		logger.Error("failed-delete-release", err, lager.Data{
-			"id": id,
-			"name": name,
-		})
-
 		return err
 	}
 
@@ -202,7 +187,7 @@ func GetStatus(id string, client *helmi.Client, logger lager.Logger) (Status, er
 		exists, existsErr := client.ExistRelease(name)
 
 		if existsErr == nil && !exists {
-			logger.Info("release-status-delete-already", lager.Data{
+			logger.Info("release-status-instance-already-delete", lager.Data{
 				"id": id,
 				"name": name,
 			})

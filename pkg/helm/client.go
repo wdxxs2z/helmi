@@ -73,7 +73,7 @@ func (c *Client) TillerCheck() error {
 }
 
 func (c *Client) ExistRelease(release string) (bool, error) {
-	c.logger.Debug("exist release", lager.Data{
+	c.logger.Debug("exist-release", lager.Data{
 		"check-release-exist": release,
 	})
 	statusRes, err := c.helm.ReleaseStatus(release)
