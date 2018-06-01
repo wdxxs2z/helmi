@@ -297,16 +297,16 @@ type clusterVars struct {
 }
 
 func ingressPort(helmStatus helmi.Status) string {
-	if len(helmStatus.IngressPorts) > 0 {
-		return strconv.Itoa(helmStatus.IngressPorts[0])
+	if len(helmStatus.Ingresses) > 0 {
+		return strconv.Itoa(helmStatus.Ingresses[0].IngressPort)
 	} else {
 		return ""
 	}
 }
 
 func ingressAddress(helmStatus helmi.Status) string {
-	if len(helmStatus.IngressHosts) > 0 {
-		return helmStatus.IngressHosts[0]
+	if len(helmStatus.Ingresses) > 0 {
+		return helmStatus.Ingresses[0].IngressHosts[0]
 	} else {
 		return ""
 	}
@@ -314,21 +314,23 @@ func ingressAddress(helmStatus helmi.Status) string {
 
 func (c clusterVars) Port(port ...int) string {
 
-	if c.helmStatus.ServiceType == "LoadBalancer" {
-		for clusterPort, nodePort := range c.helmStatus.ClusterPorts {
+	service := c.helmStatus.Services[0]
+
+	if service.ServiceType == "LoadBalancer" {
+		for clusterPort, nodePort := range service.ClusterPorts {
 			if len(port) == 0 || port[0] == clusterPort {
 				return strconv.Itoa(nodePort)
 			}
 		}
 	}
 
-	for clusterPort, nodePort := range c.helmStatus.NodePorts {
+	for clusterPort, nodePort := range service.NodePorts {
 		if len(port) == 0 || port[0] == clusterPort {
 			return strconv.Itoa(nodePort)
 		}
 	}
 
-	for clusterPort, nodePort := range c.helmStatus.ClusterPorts {
+	for clusterPort, nodePort := range service.ClusterPorts {
 		if len(port) == 0 || port[0] == clusterPort {
 			return strconv.Itoa(nodePort)
 		}
@@ -342,17 +344,19 @@ func (c clusterVars) Port(port ...int) string {
 }
 
 func extractAddress(kubernetesNodes []kubectl.Node, helmStatus helmi.Status, serviceName string) string {
+	service := helmStatus.Services[0]
+
 	// return dns name if set as environment variable
 	if value, ok := os.LookupEnv("DOMAIN"); ok {
 		return value
 	}
 
-	if helmStatus.ServiceType == "ClusterIP" {
+	if service.ServiceType == "ClusterIP" {
 		if value, ok := os.LookupEnv("CLUSTER_DNS"); ok {
 			return fmt.Sprintf("%s-%s.%s.%s", helmStatus.Name, serviceName, helmStatus.Namespace, value)
 		}
 
-	} else if helmStatus.ServiceType == "NodePort" {
+	} else if service.ServiceType == "NodePort" {
 		for _, node := range kubernetesNodes {
 			if len(node.ExternalIP) > 0 {
 				return node.ExternalIP
@@ -363,9 +367,9 @@ func extractAddress(kubernetesNodes []kubectl.Node, helmStatus helmi.Status, ser
 				return node.InternalIP
 			}
 		}
-	} else if helmStatus.ServiceType == "LoadBalancer" {
-		return helmStatus.ExternalIP
-	} else if helmStatus.ServiceType == "ExternalName" {
+	} else if service.ServiceType == "LoadBalancer" {
+		return service.ExternalIP
+	} else if service.ServiceType == "ExternalName" {
 		//TODO
 		return ""
 	}

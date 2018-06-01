@@ -146,14 +146,13 @@ func Exists(id string, client *helmi.Client, logger lager.Logger) (bool, error) 
 	logger.Debug("release-exist-check",lager.Data{
 		helmicons.InstanceIDLogKey: id,
 	})
-	name := getName(id)
-	exists, err := client.ExistRelease(name)
+
+	releaseName := getName(id)
+
+	exists, err := client.ExistRelease(releaseName)
 
 	if err != nil {
-		logger.Error("release-exist-check-error", err, lager.Data{
-			"id": id,
-			"name": name,
-		})
+		logger.Error("release-exist-check-error", err, lager.Data{"id": id})
 	}
 	return exists, err
 }

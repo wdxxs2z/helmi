@@ -10,13 +10,7 @@ import (
 )
 
 const (
-	StatusFailed = "STATUS: FAILED"
-	StatusDeployed = "STATUS: DEPLOYED"
-
 	ResourcePrefix = "==> "
-
-	NamespacePrefix = "NAMESPACE: "
-	DeploymentTimePrefix = "LAST DEPLOYED: "
 
 	DesiredLabel = "DESIRED"
 	CurrentLabel = "CURRENT"
@@ -26,6 +20,12 @@ const (
 	ExternalIPLabel = "EXTERNAL-IP"
 	IngressHostsLabel = "HOSTS"
 	IngressPortsLabel = "PORTS"
+	NameLabel = "NAME"
+	ClusterIPLabel = "CLUSTER-IP"
+	AgeLabel = "AGE"
+	AddressLable = "ADDRESS"
+
+
 )
 
 type Status struct {
@@ -37,15 +37,22 @@ type Status struct {
 	DesiredNodes int
 	AvailableNodes int
 
-	NodePorts map[int] int
-	ClusterPorts map[int] int
+	Services []StatusService
+	Ingresses []StatusIngress
+}
 
-	IngressHosts []string
-	IngressPorts []int
+type StatusService struct {
+	Name       	string
+	ServiceType 	string
+	NodePorts 	map[int] int
+	ClusterPorts 	map[int] int
+	ExternalIP 	string
+}
 
-	ExternalIP string
-
-	ServiceType string
+type StatusIngress struct {
+	Name       	string
+	IngressHosts 	[]string
+	IngressPort 	int
 }
 
 func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time, deployed bool, rawdata []byte) (Status, error) {
@@ -53,9 +60,6 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 	status := Status{
 		DesiredNodes: 0,
 		AvailableNodes: 0,
-
-		NodePorts:    map[int]int{},
-		ClusterPorts: map[int]int{},
 	}
 
 	scanner := bufio.NewScanner(bytes.NewReader(rawdata))
@@ -68,8 +72,16 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 	columnIngressHosts := -1
 	columnIngressPorts := -1
 	columnExternalIP := -1
+	columnName := -1
+	columnClusterIP := -1
+	columnAge := -1
+	columnAddress := -1
 
 	var lastResource string
+
+	//init helm status
+	var statusServices = []StatusService{}
+	var statusIngresses = []StatusIngress{}
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -85,6 +97,10 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 			columnIngressHosts = -1
 			columnIngressPorts = -1
 			columnExternalIP = -1
+			columnName = -1
+			columnClusterIP = -1
+			columnAge = -1
+			columnAddress = -1
 		}
 
 		if strings.HasPrefix(line, ResourcePrefix) {
@@ -99,6 +115,11 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 		indexIngressHosts := strings.Index(line, IngressHostsLabel)
 		indexIngressPorts := strings.Index(line, IngressPortsLabel)
 		indexExternalIP := strings.Index(line, ExternalIPLabel)
+		indexName := strings.Index(line, NameLabel)
+		indexClusterIP := strings.Index(line, ClusterIPLabel)
+		indexAge := strings.Index(line, AgeLabel)
+		indexAddress := strings.Index(line, AddressLable)
+
 
 		if indexDesired >= 0 && indexCurrent >= 0 {
 			columnDesired = indexDesired
@@ -136,65 +157,91 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 			}
 		}
 
-		if indexIngressHosts >= 0 {
+		if indexIngressHosts >= 0 && indexIngressPorts >= 0 && indexName >= 0 && indexAddress >= 0 && indexAge >= 0 {
 			columnIngressHosts = indexIngressHosts
-		} else {
-			if columnIngressHosts >= 0 {
-				status.IngressHosts = strings.Split(strings.Fields(line[columnIngressHosts:])[0], ",")
-			}
-		}
-
-		if indexIngressPorts >= 0 {
 			columnIngressPorts = indexIngressPorts
+			columnName = indexName
+			columnAddress = indexAddress
+			columnAge = indexAge
 		} else {
-			if columnIngressPorts >= 0 {
-				s := strings.Split(strings.Fields(line[columnIngressPorts:])[0], ",")
-				for index, port := range s {
-					ingressPort, ingressPortErr := strconv.Atoi(port)
-					if ingressPortErr == nil {
-						status.IngressPorts[index] = ingressPort
-					}
-				}
+			if columnIngressHosts >= 0  && columnIngressPorts >= 0 && columnName >= 0  && columnAddress >= 0 && columnAge >= 0 {
 
+				ingressesHosts := strings.Fields(line[columnIngressHosts : columnAddress])
+				ingressesPorts := strings.Fields(line[columnIngressPorts : columnAge])
+				ingressesName := strings.Fields(line[columnName : columnIngressHosts])
+
+				for i:= 0; i < len(ingressesName); i++ {
+					var port int
+					hosts := strings.Split(ingressesHosts[i], ",")
+					ingressPort , portErr := strconv.Atoi(strings.Split(ingressesPorts[i], ",")[0])
+					if portErr == nil {
+						port = ingressPort
+					}
+					statusIngress := StatusIngress{
+						Name:        	ingressesName[i],
+						IngressHosts:	hosts,
+						IngressPort:    port,
+					}
+					statusIngresses = append(statusIngresses, statusIngress)
+				}
+				status.Ingresses = statusIngresses
 			}
 		}
 
-		if indexPort >= 0 && indexType >= 0 && indexExternalIP >= 0 {
+		if indexPort >= 0 && indexType >= 0 && indexExternalIP >= 0 && indexName >= 0 && indexClusterIP >= 0 && indexAge >= 0 {
 			columnPort = indexPort
 			columnType = indexType
 			columnExternalIP = indexExternalIP
+			columnName = indexName
+			columnClusterIP = indexClusterIP
+			columnAge = indexAge
 		} else {
-			if columnPort >= 0 && columnType >= 0 && columnExternalIP >= 0 {
-				status.ServiceType = strings.Fields(line[columnType - 1:])[0]
-				status.ExternalIP = strings.Fields(line[columnExternalIP - 1:])[0]
+			if columnPort >= 0 && columnType >= 0 && columnExternalIP >= 0 && columnName >= 0 && columnClusterIP >= 0 && columnAge >= 0{
 
-				for _, portPair := range strings.Split(strings.Fields(line[columnPort:])[0], ",") {
-					portFields := strings.FieldsFunc(portPair, func(c rune) bool {
-						return c == ':' || c == '/'
-					})
+				servicesName := strings.Fields(line[columnName : columnType])
+				servicesType := strings.Fields(line[columnType  : columnClusterIP])
+				servicesExternalIP := strings.Fields(line[columnExternalIP : columnPort])
+				servicesPort := strings.Fields(line[columnPort : columnAge])
 
-					if len(portFields) == 2 {
-						clusterPort, clusterPortErr := strconv.Atoi(portFields[0])
 
-						if clusterPortErr == nil {
-							status.ClusterPorts[clusterPort] = clusterPort
+				for i := 0; i < len(servicesName); i++ {
+					clusterPorts := make(map[int]int)
+					nodePorts := make(map[int]int)
 
+					for _, portPair := range strings.Split(servicesPort[i], ",") {
+						portFields := strings.FieldsFunc(portPair, func(c rune) bool {
+							return c == ':' || c == '/'
+						})
+						if len(portFields) == 2 {
+							clusterPort, clusterPortErr := strconv.Atoi(portFields[0])
+
+							if clusterPortErr == nil {
+								clusterPorts[clusterPort] = clusterPort
+							}
+						}
+						if len(portFields) == 3 {
+							nodePort, nodePortErr := strconv.Atoi(portFields[1])
+							clusterPort, clusterPortErr := strconv.Atoi(portFields[0])
+
+							if nodePortErr == nil && clusterPortErr == nil {
+								nodePorts[clusterPort] = nodePort
+								clusterPorts[clusterPort] = clusterPort
+							}
 						}
 					}
+					statusService := StatusService{
+						Name:		servicesName[i],
+						ServiceType:    servicesType[i],
+						ExternalIP:     servicesExternalIP[i],
+						ClusterPorts:   clusterPorts,
+						NodePorts:      nodePorts,
 
-					if len(portFields) == 3 {
-						nodePort, nodePortErr := strconv.Atoi(portFields[1])
-						clusterPort, clusterPortErr := strconv.Atoi(portFields[0])
-
-						if nodePortErr == nil && clusterPortErr == nil {
-							status.NodePorts[clusterPort] = nodePort
-							status.ClusterPorts[clusterPort] = clusterPort
-						}
 					}
+					statusServices = append(statusServices, statusService)
 				}
+				status.Services = statusServices
 			}
 		}
-
 		_ = lastResource
 	}
 

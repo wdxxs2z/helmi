@@ -211,16 +211,13 @@ func (b *HelmBroker) Deprovision(context context.Context, instanceID string, det
 		helmicons.AcceptsIncompleteLogKey: 	asyncAllowed,
 	})
 
-	exist, err := release.Exists(instanceID, b.helmClient, b.logger)
-	if !exist && err == nil {
+	exist, existErr := release.Exists(instanceID, b.helmClient, b.logger)
+
+	if !exist && existErr == nil {
 		return brokerapi.DeprovisionServiceSpec{}, brokerapi.ErrInstanceDoesNotExist
 	}
 
-	if err := release.Delete(instanceID, b.helmClient, b.logger); err != nil {
-		return brokerapi.DeprovisionServiceSpec{}, err
-	}
-
-	return brokerapi.DeprovisionServiceSpec{}, nil
+	return brokerapi.DeprovisionServiceSpec{}, release.Delete(instanceID, b.helmClient, b.logger)
 }
 
 func (b *HelmBroker) Bind(context context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error){

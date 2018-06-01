@@ -21,6 +21,9 @@ import (
 	"github.com/wdxxs2z/helmi/pkg/kubectl"
 	"github.com/wdxxs2z/helmi/pkg/config"
 	"github.com/wdxxs2z/helmi/pkg/utils"
+	"regexp"
+	"text/tabwriter"
+	"bytes"
 )
 
 type Client struct {
@@ -72,16 +75,15 @@ func (c *Client) TillerCheck() error {
 	return c.helm.PingTiller()
 }
 
-func (c *Client) ExistRelease(release string) (bool, error) {
-	c.logger.Debug("exist-release", lager.Data{
-		"check-release-exist": release,
-	})
-	statusRes, err := c.helm.ReleaseStatus(release)
+func (c *Client) ExistRelease(releaseName string) (bool, error) {
+	c.logger.Debug("check-release-exist-with-name", lager.Data{"release-name": releaseName})
+
+	statusRes, err := c.helm.ReleaseStatus(releaseName)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			return false, nil
 		} else {
-			return false, fmt.Errorf("check release cause an error: %s", err)
+			return false, err
 		}
 	}
 	if statusRes == nil {
@@ -232,6 +234,8 @@ func (c *Client) GetStatus(release string) (Status, error) {
 	status_code := status.GetInfo().GetStatus().GetCode()
 	resources := status.GetInfo().GetStatus().GetResources()
 
+	resources = formatResources(resources)
+
 	loc, _ := time.LoadLocation("Local")
 	lastDeploymentTime, _ := time.ParseInLocation(time.ANSIC, timeconv.String(status.Info.LastDeployed), loc)
 
@@ -240,6 +244,7 @@ func (c *Client) GetStatus(release string) (Status, error) {
 		deployed = true
 	}
 	s, err := convertByteToStatus(name, namespace, lastDeploymentTime, deployed, []byte(resources))
+
 	if err != nil {
 		return Status{}, err
 	}
@@ -257,6 +262,15 @@ func (c *Client) getRelease(release string) (*rspb.Release, error)  {
 		return nil, fmt.Errorf("Error in multi releases exist for release %s", release)
 	}
 	return releases.Releases[0], nil
+}
+
+func formatResources(resources string) string {
+	buffer := bytes.NewBuffer(make([]byte, 0, 1024))
+	re := regexp.MustCompile("  +")
+	w := tabwriter.NewWriter(buffer, 0, 0, 2, ' ', tabwriter.TabIndent)
+	w.Write([]byte(re.ReplaceAllString(resources, "\t")))
+	w.Flush()
+	return buffer.String()
 }
 
 func getHelmEnvironment(config config.Config) environment.EnvSettings {
