@@ -52,3 +52,4 @@ user-credentials:
   port: "{{ .Cluster.Port 5672 }}"
   vhost: ""
   ssl: false
+  dashboard: "{{ .Cluster.IngressAddress }}:{{ .Cluster.IngressPort }}"

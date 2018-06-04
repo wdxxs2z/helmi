@@ -290,6 +290,7 @@ type releaseVars struct {
 
 type clusterVars struct {
 	Address    	string
+	HaAddress       string
 	Hostname   	string
 	IngressAddress  string
 	IngressPort     string
@@ -343,20 +344,69 @@ func (c clusterVars) Port(port ...int) string {
 	return ""
 }
 
-func extractAddress(kubernetesNodes []kubectl.Node, helmStatus helmi.Status, serviceName string) string {
-	service := helmStatus.Services[0]
+func extractHAAddress(kubernetesNodes []kubectl.Node, helmStatus helmi.Status) string {
+	addresses := []string{}
+	for _, service := range helmStatus.Services {
+		if service.ServiceType == "ClusterIP" {
+			if clusterDns, ok := os.LookupEnv("CLUSTER_DNS"); ok {
+				var port string
+				for _, nodePort := range service.ClusterPorts{
+					port = strconv.Itoa(nodePort)
+				}
+				address := fmt.Sprintf("%s.%s.%s:%s", service.Name, helmStatus.Namespace, clusterDns, port)
+				addresses = append(addresses, address)
+			} else {
+				return ""
+			}
+		} else if service.ServiceType == "NodePort" {
+			var port string
+			for _, nodePort := range service.NodePorts {
+				port = strconv.Itoa(nodePort)
+			}
+			var ip string
+			for _, node := range kubernetesNodes {
+				if len(node.ExternalIP) > 0 {
+					ip = node.ExternalIP
+				}
+			}
+			for _, node := range kubernetesNodes {
+				if len(node.InternalIP) > 0 {
+					ip = node.InternalIP
+				}
+			}
+			address := fmt.Sprintf("%s:%s", ip, port)
+			addresses = append(addresses, address)
+		} else if service.ServiceType == "LoadBalancer" {
+			var port string
+			for _, nodePort := range service.ClusterPorts{
+				port = strconv.Itoa(nodePort)
+			}
+			address := fmt.Sprintf("%s:%s", service.ExternalIP, port)
+			addresses = append(addresses, address)
+		}
+	}
+	return strings.Join(addresses, ",")
+}
+
+func extractAddress(kubernetesNodes []kubectl.Node, helmStatus helmi.Status, discoveryName string) string {
+	var masterService helmi.StatusService
+	for _,service := range helmStatus.Services {
+		if strings.Contains(service.Name, discoveryName){
+			masterService = service
+		}
+	}
 
 	// return dns name if set as environment variable
 	if value, ok := os.LookupEnv("DOMAIN"); ok {
 		return value
 	}
 
-	if service.ServiceType == "ClusterIP" {
+	if masterService.ServiceType == "ClusterIP" {
 		if value, ok := os.LookupEnv("CLUSTER_DNS"); ok {
-			return fmt.Sprintf("%s-%s.%s.%s", helmStatus.Name, serviceName, helmStatus.Namespace, value)
+			return fmt.Sprintf("%s-%s.%s.%s", helmStatus.Name, discoveryName, helmStatus.Namespace, value)
 		}
 
-	} else if service.ServiceType == "NodePort" {
+	} else if masterService.ServiceType == "NodePort" {
 		for _, node := range kubernetesNodes {
 			if len(node.ExternalIP) > 0 {
 				return node.ExternalIP
@@ -367,9 +417,9 @@ func extractAddress(kubernetesNodes []kubectl.Node, helmStatus helmi.Status, ser
 				return node.InternalIP
 			}
 		}
-	} else if service.ServiceType == "LoadBalancer" {
-		return service.ExternalIP
-	} else if service.ServiceType == "ExternalName" {
+	} else if masterService.ServiceType == "LoadBalancer" {
+		return masterService.ExternalIP
+	} else if masterService.ServiceType == "ExternalName" {
 		//TODO
 		return ""
 	}
@@ -399,6 +449,7 @@ func (s *Service) UserCredentials(plan *Plan, kubernetesNodes []kubectl.Node, he
 		},
 		Cluster: clusterVars{
 			Address:    extractAddress(kubernetesNodes, helmStatus, s.InternalDiscoveryName),
+			HaAddress:  extractHAAddress(kubernetesNodes, helmStatus),
 			Hostname:   extractHostname(kubernetesNodes),
 			IngressAddress: ingressAddress(helmStatus),
 			IngressPort: ingressPort(helmStatus),

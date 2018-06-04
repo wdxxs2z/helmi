@@ -165,25 +165,23 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 			columnAge = indexAge
 		} else {
 			if columnIngressHosts >= 0  && columnIngressPorts >= 0 && columnName >= 0  && columnAddress >= 0 && columnAge >= 0 {
+				ingressesHosts := strings.Fields(line[columnIngressHosts :])[0]
+				// this is a helm status ingress bugs.
+				ingressesPorts := strings.Fields(line[columnAddress :])[0]
+				ingressesName := strings.Fields(line[columnName :])[0]
 
-				ingressesHosts := strings.Fields(line[columnIngressHosts : columnAddress])
-				ingressesPorts := strings.Fields(line[columnIngressPorts : columnAge])
-				ingressesName := strings.Fields(line[columnName : columnIngressHosts])
-
-				for i:= 0; i < len(ingressesName); i++ {
-					var port int
-					hosts := strings.Split(ingressesHosts[i], ",")
-					ingressPort , portErr := strconv.Atoi(strings.Split(ingressesPorts[i], ",")[0])
-					if portErr == nil {
-						port = ingressPort
-					}
-					statusIngress := StatusIngress{
-						Name:        	ingressesName[i],
-						IngressHosts:	hosts,
-						IngressPort:    port,
-					}
-					statusIngresses = append(statusIngresses, statusIngress)
+				var port int
+				hosts := strings.Split(ingressesHosts, ",")
+				ingressPort , portErr := strconv.Atoi(strings.Split(ingressesPorts, ",")[0])
+				if portErr == nil {
+					port = ingressPort
 				}
+				statusIngress := StatusIngress{
+					Name:        	ingressesName,
+					IngressHosts:	hosts,
+					IngressPort:    port,
+				}
+				statusIngresses = append(statusIngresses, statusIngress)
 				status.Ingresses = statusIngresses
 			}
 		}

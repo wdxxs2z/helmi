@@ -74,3 +74,4 @@ user-credentials:
   database: "{{ .Values.db.name }}"
   hostname: "{{ .Cluster.Address }}"
   port: "{{ .Cluster.Port }}"
+  hajdbcUrl: "jdbc:mysql:replication://{{ .Cluster.HaAddress }}/{{ .Values.db.name }}"
