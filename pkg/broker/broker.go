@@ -166,7 +166,6 @@ func (b *HelmBroker) Provision(context context.Context, instanceID string, detai
 	}
 
 	if err := release.Install(&b.catalog, details.ServiceID, servicePlan.Id, instanceID, asyncAllowed, provisionParameters, requestContext, b.helmClient, b.logger); err != nil {
-		defer release.Delete(instanceID, b.helmClient, b.logger)
 		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
@@ -290,13 +289,13 @@ func (b *HelmBroker) LastOperation(context context.Context, instanceID, operatio
 		}, nil
 	}
 
-	if status.IsAvailable {
+	if status.IsAvailable || status.IsDeleted {
 		return brokerapi.LastOperation{
 			State: "succeeded",
 		},nil
 	}
 
-	if status.IsDeployed && !status.IsAvailable {
+	if status.IsDeployed && !status.IsAvailable || status.IsDeleting {
 		return brokerapi.LastOperation{
 			State: "in progress",
 		}, nil

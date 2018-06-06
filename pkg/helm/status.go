@@ -34,6 +34,8 @@ type Status struct {
 	Namespace  string
 	IsFailed   bool
 	IsDeployed bool
+	IsDeleted bool
+	IsDeleting bool
 
 	DesiredNodes int
 	AvailableNodes int
@@ -262,9 +264,15 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 		status.IsDeployed = true
 	case "FAILED":
 		status.IsFailed = true
+	case "DELETED":
+		status.IsDeleted = true
+	case "DELETING":
+		status.IsDeleting = true
 	default:
 		status.IsDeployed = false
 		status.IsFailed = true
+		status.IsDeleted = false
+		status.IsDeleting = false
 	}
 
 	return status, nil

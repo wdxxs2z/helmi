@@ -14,6 +14,8 @@ type Status struct {
 	IsFailed    bool
 	IsDeployed  bool
 	IsAvailable bool
+	IsDeleted   bool
+	IsDeleting  bool
 }
 
 func Install(catalog *catalog.Catalog,
@@ -209,6 +211,8 @@ func GetStatus(id string, client *helmi.Client, logger lager.Logger) (Status, er
 		IsFailed:    status.IsFailed,
 		IsDeployed:  status.IsDeployed,
 		IsAvailable: status.AvailableNodes >= status.DesiredNodes,
+		IsDeleting:  status.IsDeleting,
+		IsDeleted:   status.IsDeployed,
 	}, nil
 }
 
