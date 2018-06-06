@@ -315,6 +315,10 @@ func ingressAddress(helmStatus helmi.Status) string {
 
 func (c clusterVars) Port(port ...int) string {
 
+	if len(c.helmStatus.Services) == 0 {
+		return ""
+	}
+
 	service := c.helmStatus.Services[0]
 
 	if service.ServiceType == "LoadBalancer" {

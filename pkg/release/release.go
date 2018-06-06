@@ -63,10 +63,10 @@ func Install(catalog *catalog.Catalog,
 		})
 	}
 
-	_, err := client.InstallRelease(name, chart, chartVersion, service.ChartOffline, chartValues, chartNamespace, acceptsIncomplete)
+	_, installErr := client.InstallRelease(name, chart, chartVersion, service.ChartOffline, chartValues, chartNamespace, acceptsIncomplete)
 
-	if err != nil {
-		logger.Error("failed-install-release", err, lager.Data{
+	if installErr != nil {
+		logger.Error("failed-install-release", installErr, lager.Data{
 			"id": id,
 			"name": name,
 			"chart": chart,
@@ -74,7 +74,7 @@ func Install(catalog *catalog.Catalog,
 			"service-id": serviceId,
 			"plan-id": planId,
 		})
-		return err
+		return installErr
 	}
 
 	logger.Info("release-new-install-success", lager.Data{

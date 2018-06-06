@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 	"os"
+	"k8s.io/helm/pkg/proto/hapi/release"
 )
 
 const (
@@ -55,7 +56,7 @@ type StatusIngress struct {
 	IngressPort 	int
 }
 
-func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time, deployed bool, rawdata []byte) (Status, error) {
+func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time, status_code release.Status_Code, rawdata []byte) (Status, error) {
 
 	status := Status{
 		DesiredNodes: 0,
@@ -255,7 +256,16 @@ func convertByteToStatus(release, namespace string, lastDeploymentTime time.Time
 
 	status.Name = release
 	status.Namespace = namespace
-	status.IsDeployed = deployed
+
+	switch status_code.String() {
+	case "DEPLOYED":
+		status.IsDeployed = true
+	case "FAILED":
+		status.IsFailed = true
+	default:
+		status.IsDeployed = false
+		status.IsFailed = true
+	}
 
 	return status, nil
 }

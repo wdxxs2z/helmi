@@ -127,15 +127,18 @@ func (c *Client) InstallRelease(release string, chartName string, version string
 	}
 
 	res, err := c.helm.InstallReleaseFromChart(chart, namespace, installOpts(release, wait, rawValues)...)
-	if res == nil || res.Release == nil {
+
+	if err != nil {
+		return nil, err
+	} else if  res == nil || res.Release == nil {
 		rls ,err := c.getRelease(release)
 		if err != nil {
-			return nil, fmt.Errorf("get the release cause an error: %s", err)
+			return nil, err
 		}
 		if rls != nil {
 			return rls, nil
 		}
-	}else {
+	} else {
 		return res.Release, nil
 	}
 	return nil, err
@@ -239,11 +242,7 @@ func (c *Client) GetStatus(release string) (Status, error) {
 	loc, _ := time.LoadLocation("Local")
 	lastDeploymentTime, _ := time.ParseInLocation(time.ANSIC, timeconv.String(status.Info.LastDeployed), loc)
 
-	var deployed bool = false
-	if status_code == 1 {
-		deployed = true
-	}
-	s, err := convertByteToStatus(name, namespace, lastDeploymentTime, deployed, []byte(resources))
+	s, err := convertByteToStatus(name, namespace, lastDeploymentTime, status_code, []byte(resources))
 
 	if err != nil {
 		return Status{}, err

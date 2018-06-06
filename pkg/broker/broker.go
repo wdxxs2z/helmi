@@ -166,10 +166,11 @@ func (b *HelmBroker) Provision(context context.Context, instanceID string, detai
 	}
 
 	if err := release.Install(&b.catalog, details.ServiceID, servicePlan.Id, instanceID, asyncAllowed, provisionParameters, requestContext, b.helmClient, b.logger); err != nil {
+		defer release.Delete(instanceID, b.helmClient, b.logger)
 		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
-	return brokerapi.ProvisionedServiceSpec{IsAsync: false}, nil
+	return brokerapi.ProvisionedServiceSpec{}, nil
 }
 
 func (b *HelmBroker) Update(context context.Context, instanceID string, details brokerapi.UpdateDetails, asyncAllowed bool) (brokerapi.UpdateServiceSpec, error) {
